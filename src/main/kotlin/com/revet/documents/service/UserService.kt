@@ -32,8 +32,19 @@ interface UserService {
         isStaff: Boolean? = null,
         isSuperuser: Boolean? = null
     ): com.revet.documents.domain.User?
+    fun updateUserByUuid(
+        uuid: UUID,
+        email: String? = null,
+        firstName: String? = null,
+        lastName: String? = null,
+        profile: com.revet.documents.domain.User.UserProfile? = null,
+        isActive: Boolean? = null,
+        isStaff: Boolean? = null,
+        isSuperuser: Boolean? = null
+    ): com.revet.documents.domain.User?
     fun updateLastLogin(id: Long): com.revet.documents.domain.User?
     fun deleteUser(id: Long): Boolean
+    fun deleteUserByUuid(uuid: UUID): Boolean
 }
 
 /**
@@ -141,6 +152,25 @@ class UserServiceImpl @Inject constructor(
 
     override fun deleteUser(id: Long): Boolean {
         return userRepository.delete(id)
+    }
+
+    override fun updateUserByUuid(
+        uuid: UUID,
+        email: String?,
+        firstName: String?,
+        lastName: String?,
+        profile: com.revet.documents.domain.User.UserProfile?,
+        isActive: Boolean?,
+        isStaff: Boolean?,
+        isSuperuser: Boolean?
+    ): com.revet.documents.domain.User? {
+        val user = userRepository.findByUuid(uuid) ?: return null
+        return updateUser(user.id!!, email, firstName, lastName, profile, isActive, isStaff, isSuperuser)
+    }
+
+    override fun deleteUserByUuid(uuid: UUID): Boolean {
+        val user = userRepository.findByUuid(uuid) ?: return false
+        return userRepository.delete(user.id!!)
     }
 
     private fun isValidEmail(email: String): Boolean {

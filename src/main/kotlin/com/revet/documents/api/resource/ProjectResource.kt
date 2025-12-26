@@ -1,7 +1,10 @@
 package com.revet.documents.api.resource
 
 import com.revet.documents.api.mapper.ProjectDTOMapper
+import com.revet.documents.domain.PermissionType
 import com.revet.documents.dto.*
+import com.revet.documents.security.ResourceType
+import com.revet.documents.security.SecuredBy
 import com.revet.documents.service.ProjectService
 import jakarta.inject.Inject
 import jakarta.ws.rs.*
@@ -53,31 +56,8 @@ class ProjectResource @Inject constructor(
     }
 
     @GET
-    @Path("/{id}")
-    @Operation(summary = "Get project by ID", description = "Retrieve a single project by its ID")
-    @APIResponses(
-        APIResponse(
-            responseCode = "200",
-            description = "Project found",
-            content = [Content(mediaType = MediaType.APPLICATION_JSON, schema = Schema(implementation = _root_ide_package_.com.revet.documents.dto.ProjectDTO::class))]
-        ),
-        APIResponse(responseCode = "404", description = "Project not found")
-    )
-    fun getProject(
-        @PathParam("id")
-        @Parameter(description = "Project ID")
-        id: Long
-    ): Response {
-        val project = projectService.getProjectById(id)
-            ?: return Response.status(Response.Status.NOT_FOUND)
-                .entity(mapOf("error" to "Project not found"))
-                .build()
-
-        return Response.ok(_root_ide_package_.com.revet.documents.api.mapper.ProjectDTOMapper.toDTO(project)).build()
-    }
-
-    @GET
-    @Path("/uuid/{uuid}")
+    @Path("/{uuid}")
+    @SecuredBy(resource = ResourceType.PROJECT, permission = PermissionType.CAN_INVITE)
     @Operation(summary = "Get project by UUID", description = "Retrieve a single project by its UUID")
     @APIResponses(
         APIResponse(
@@ -85,9 +65,10 @@ class ProjectResource @Inject constructor(
             description = "Project found",
             content = [Content(mediaType = MediaType.APPLICATION_JSON, schema = Schema(implementation = _root_ide_package_.com.revet.documents.dto.ProjectDTO::class))]
         ),
-        APIResponse(responseCode = "404", description = "Project not found")
+        APIResponse(responseCode = "404", description = "Project not found"),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
-    fun getProjectByUuid(
+    fun getProject(
         @PathParam("uuid")
         @Parameter(description = "Project UUID")
         uuid: UUID
@@ -131,7 +112,8 @@ class ProjectResource @Inject constructor(
     }
 
     @PUT
-    @Path("/{id}")
+    @Path("/{uuid}")
+    @SecuredBy(resource = ResourceType.PROJECT, permission = PermissionType.CAN_CREATE)
     @Operation(summary = "Update project", description = "Update an existing project")
     @APIResponses(
         APIResponse(
@@ -140,17 +122,18 @@ class ProjectResource @Inject constructor(
             content = [Content(mediaType = MediaType.APPLICATION_JSON, schema = Schema(implementation = _root_ide_package_.com.revet.documents.dto.ProjectDTO::class))]
         ),
         APIResponse(responseCode = "404", description = "Project not found"),
-        APIResponse(responseCode = "400", description = "Invalid request")
+        APIResponse(responseCode = "400", description = "Invalid request"),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
     fun updateProject(
-        @PathParam("id")
-        @Parameter(description = "Project ID")
-        id: Long,
+        @PathParam("uuid")
+        @Parameter(description = "Project UUID")
+        uuid: UUID,
         request: com.revet.documents.dto.UpdateProjectRequest
     ): Response {
         return try {
-            val project = projectService.updateProject(
-                id = id,
+            val project = projectService.updateProjectByUuid(
+                uuid = uuid,
                 name = request.name,
                 description = request.description,
                 clientIds = request.clientIds,
@@ -169,7 +152,8 @@ class ProjectResource @Inject constructor(
     }
 
     @POST
-    @Path("/{id}/clients")
+    @Path("/{uuid}/clients")
+    @SecuredBy(resource = ResourceType.PROJECT, permission = PermissionType.CAN_MANAGE)
     @Operation(summary = "Add client to project", description = "Add a client user to the project")
     @APIResponses(
         APIResponse(
@@ -177,15 +161,16 @@ class ProjectResource @Inject constructor(
             description = "Client added",
             content = [Content(mediaType = MediaType.APPLICATION_JSON, schema = Schema(implementation = _root_ide_package_.com.revet.documents.dto.ProjectDTO::class))]
         ),
-        APIResponse(responseCode = "404", description = "Project not found")
+        APIResponse(responseCode = "404", description = "Project not found"),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
     fun addClient(
-        @PathParam("id")
-        @Parameter(description = "Project ID")
-        id: Long,
+        @PathParam("uuid")
+        @Parameter(description = "Project UUID")
+        uuid: UUID,
         request: com.revet.documents.dto.AddClientRequest
     ): Response {
-        val project = projectService.addClientToProject(id, request.clientId)
+        val project = projectService.addClientToProjectByUuid(uuid, request.clientId)
             ?: return Response.status(Response.Status.NOT_FOUND)
                 .entity(mapOf("error" to "Project not found"))
                 .build()
@@ -194,7 +179,8 @@ class ProjectResource @Inject constructor(
     }
 
     @DELETE
-    @Path("/{id}/clients/{clientId}")
+    @Path("/{uuid}/clients/{clientId}")
+    @SecuredBy(resource = ResourceType.PROJECT, permission = PermissionType.CAN_MANAGE)
     @Operation(summary = "Remove client from project", description = "Remove a client user from the project")
     @APIResponses(
         APIResponse(
@@ -202,17 +188,18 @@ class ProjectResource @Inject constructor(
             description = "Client removed",
             content = [Content(mediaType = MediaType.APPLICATION_JSON, schema = Schema(implementation = _root_ide_package_.com.revet.documents.dto.ProjectDTO::class))]
         ),
-        APIResponse(responseCode = "404", description = "Project not found")
+        APIResponse(responseCode = "404", description = "Project not found"),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
     fun removeClient(
-        @PathParam("id")
-        @Parameter(description = "Project ID")
-        id: Long,
+        @PathParam("uuid")
+        @Parameter(description = "Project UUID")
+        uuid: UUID,
         @PathParam("clientId")
         @Parameter(description = "Client ID")
         clientId: Long
     ): Response {
-        val project = projectService.removeClientFromProject(id, clientId)
+        val project = projectService.removeClientFromProjectByUuid(uuid, clientId)
             ?: return Response.status(Response.Status.NOT_FOUND)
                 .entity(mapOf("error" to "Project not found"))
                 .build()
@@ -221,7 +208,8 @@ class ProjectResource @Inject constructor(
     }
 
     @POST
-    @Path("/{id}/tags")
+    @Path("/{uuid}/tags")
+    @SecuredBy(resource = ResourceType.PROJECT, permission = PermissionType.CAN_CREATE)
     @Operation(summary = "Add tag to project", description = "Add a tag to the project")
     @APIResponses(
         APIResponse(
@@ -229,16 +217,17 @@ class ProjectResource @Inject constructor(
             description = "Tag added",
             content = [Content(mediaType = MediaType.APPLICATION_JSON, schema = Schema(implementation = _root_ide_package_.com.revet.documents.dto.ProjectDTO::class))]
         ),
-        APIResponse(responseCode = "404", description = "Project not found")
+        APIResponse(responseCode = "404", description = "Project not found"),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
     fun addTag(
-        @PathParam("id")
-        @Parameter(description = "Project ID")
-        id: Long,
+        @PathParam("uuid")
+        @Parameter(description = "Project UUID")
+        uuid: UUID,
         request: com.revet.documents.dto.AddTagRequest
     ): Response {
         return try {
-            val project = projectService.addTagToProject(id, request.tag)
+            val project = projectService.addTagToProjectByUuid(uuid, request.tag)
                 ?: return Response.status(Response.Status.NOT_FOUND)
                     .entity(mapOf("error" to "Project not found"))
                     .build()
@@ -252,7 +241,8 @@ class ProjectResource @Inject constructor(
     }
 
     @DELETE
-    @Path("/{id}/tags/{tag}")
+    @Path("/{uuid}/tags/{tag}")
+    @SecuredBy(resource = ResourceType.PROJECT, permission = PermissionType.CAN_CREATE)
     @Operation(summary = "Remove tag from project", description = "Remove a tag from the project")
     @APIResponses(
         APIResponse(
@@ -260,17 +250,18 @@ class ProjectResource @Inject constructor(
             description = "Tag removed",
             content = [Content(mediaType = MediaType.APPLICATION_JSON, schema = Schema(implementation = _root_ide_package_.com.revet.documents.dto.ProjectDTO::class))]
         ),
-        APIResponse(responseCode = "404", description = "Project not found")
+        APIResponse(responseCode = "404", description = "Project not found"),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
     fun removeTag(
-        @PathParam("id")
-        @Parameter(description = "Project ID")
-        id: Long,
+        @PathParam("uuid")
+        @Parameter(description = "Project UUID")
+        uuid: UUID,
         @PathParam("tag")
         @Parameter(description = "Tag to remove")
         tag: String
     ): Response {
-        val project = projectService.removeTagFromProject(id, tag)
+        val project = projectService.removeTagFromProjectByUuid(uuid, tag)
             ?: return Response.status(Response.Status.NOT_FOUND)
                 .entity(mapOf("error" to "Project not found"))
                 .build()
@@ -279,18 +270,20 @@ class ProjectResource @Inject constructor(
     }
 
     @DELETE
-    @Path("/{id}")
+    @Path("/{uuid}")
+    @SecuredBy(resource = ResourceType.PROJECT, permission = PermissionType.CAN_MANAGE)
     @Operation(summary = "Delete project", description = "Soft delete a project")
     @APIResponses(
         APIResponse(responseCode = "204", description = "Project deleted"),
-        APIResponse(responseCode = "404", description = "Project not found")
+        APIResponse(responseCode = "404", description = "Project not found"),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
     fun deleteProject(
-        @PathParam("id")
-        @Parameter(description = "Project ID")
-        id: Long
+        @PathParam("uuid")
+        @Parameter(description = "Project UUID")
+        uuid: UUID
     ): Response {
-        val deleted = projectService.deleteProject(id)
+        val deleted = projectService.deleteProjectByUuid(uuid)
         return if (deleted) {
             Response.noContent().build()
         } else {

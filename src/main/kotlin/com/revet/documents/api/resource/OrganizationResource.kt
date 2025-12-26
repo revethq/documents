@@ -1,9 +1,12 @@
 package com.revet.documents.api.resource
 
 import com.revet.documents.api.mapper.OrganizationDTOMapper
+import com.revet.documents.domain.PermissionType
 import com.revet.documents.dto.CreateOrganizationRequest
 import com.revet.documents.dto.OrganizationDTO
 import com.revet.documents.dto.UpdateOrganizationRequest
+import com.revet.documents.security.ResourceType
+import com.revet.documents.security.SecuredBy
 import com.revet.documents.service.OrganizationService
 import jakarta.inject.Inject
 import jakarta.ws.rs.*
@@ -49,31 +52,8 @@ class OrganizationResource @Inject constructor(
     }
 
     @GET
-    @Path("/{id}")
-    @Operation(summary = "Get organization by ID", description = "Retrieve a single organization by its ID")
-    @APIResponses(
-        APIResponse(
-            responseCode = "200",
-            description = "Organization found",
-            content = [Content(mediaType = MediaType.APPLICATION_JSON, schema = Schema(implementation = _root_ide_package_.com.revet.documents.dto.OrganizationDTO::class))]
-        ),
-        APIResponse(responseCode = "404", description = "Organization not found")
-    )
-    fun getOrganization(
-        @PathParam("id")
-        @Parameter(description = "Organization ID")
-        id: Long
-    ): Response {
-        val organization = organizationService.getOrganizationById(id)
-            ?: return Response.status(Response.Status.NOT_FOUND)
-                .entity(mapOf("error" to "Organization not found"))
-                .build()
-
-        return Response.ok(_root_ide_package_.com.revet.documents.api.mapper.OrganizationDTOMapper.toDTO(organization)).build()
-    }
-
-    @GET
-    @Path("/uuid/{uuid}")
+    @Path("/{uuid}")
+    @SecuredBy(resource = ResourceType.ORGANIZATION, permission = PermissionType.CAN_INVITE)
     @Operation(summary = "Get organization by UUID", description = "Retrieve a single organization by its UUID")
     @APIResponses(
         APIResponse(
@@ -81,9 +61,10 @@ class OrganizationResource @Inject constructor(
             description = "Organization found",
             content = [Content(mediaType = MediaType.APPLICATION_JSON, schema = Schema(implementation = _root_ide_package_.com.revet.documents.dto.OrganizationDTO::class))]
         ),
-        APIResponse(responseCode = "404", description = "Organization not found")
+        APIResponse(responseCode = "404", description = "Organization not found"),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
-    fun getOrganizationByUuid(
+    fun getOrganization(
         @PathParam("uuid")
         @Parameter(description = "Organization UUID")
         uuid: UUID
@@ -129,7 +110,8 @@ class OrganizationResource @Inject constructor(
     }
 
     @PUT
-    @Path("/{id}")
+    @Path("/{uuid}")
+    @SecuredBy(resource = ResourceType.ORGANIZATION, permission = PermissionType.CAN_CREATE)
     @Operation(summary = "Update organization", description = "Update an existing organization")
     @APIResponses(
         APIResponse(
@@ -138,18 +120,19 @@ class OrganizationResource @Inject constructor(
             content = [Content(mediaType = MediaType.APPLICATION_JSON, schema = Schema(implementation = _root_ide_package_.com.revet.documents.dto.OrganizationDTO::class))]
         ),
         APIResponse(responseCode = "404", description = "Organization not found"),
-        APIResponse(responseCode = "400", description = "Invalid request")
+        APIResponse(responseCode = "400", description = "Invalid request"),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
     fun updateOrganization(
-        @PathParam("id")
-        @Parameter(description = "Organization ID")
-        id: Long,
+        @PathParam("uuid")
+        @Parameter(description = "Organization UUID")
+        uuid: UUID,
         request: com.revet.documents.dto.UpdateOrganizationRequest
     ): Response {
         return try {
             val contactInfo = _root_ide_package_.com.revet.documents.api.mapper.OrganizationDTOMapper.toContactInfo(request)
-            val organization = organizationService.updateOrganization(
-                id = id,
+            val organization = organizationService.updateOrganizationByUuid(
+                uuid = uuid,
                 name = request.name,
                 description = request.description,
                 contactInfo = contactInfo,
@@ -170,18 +153,20 @@ class OrganizationResource @Inject constructor(
     }
 
     @DELETE
-    @Path("/{id}")
+    @Path("/{uuid}")
+    @SecuredBy(resource = ResourceType.ORGANIZATION, permission = PermissionType.CAN_MANAGE)
     @Operation(summary = "Delete organization", description = "Soft delete an organization")
     @APIResponses(
         APIResponse(responseCode = "204", description = "Organization deleted"),
-        APIResponse(responseCode = "404", description = "Organization not found")
+        APIResponse(responseCode = "404", description = "Organization not found"),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
     fun deleteOrganization(
-        @PathParam("id")
-        @Parameter(description = "Organization ID")
-        id: Long
+        @PathParam("uuid")
+        @Parameter(description = "Organization UUID")
+        uuid: UUID
     ): Response {
-        val deleted = organizationService.deleteOrganization(id)
+        val deleted = organizationService.deleteOrganizationByUuid(uuid)
         return if (deleted) {
             Response.noContent().build()
         } else {
