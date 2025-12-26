@@ -31,7 +31,18 @@ interface OrganizationService {
         bucketId: Long? = null,
         isActive: Boolean? = null
     ): com.revet.documents.domain.Organization?
+    fun updateOrganizationByUuid(
+        uuid: UUID,
+        name: String? = null,
+        description: String? = null,
+        contactInfo: com.revet.documents.domain.Organization.ContactInfo? = null,
+        locale: String? = null,
+        timezone: String? = null,
+        bucketId: Long? = null,
+        isActive: Boolean? = null
+    ): com.revet.documents.domain.Organization?
     fun deleteOrganization(id: Long): Boolean
+    fun deleteOrganizationByUuid(uuid: UUID): Boolean
 }
 
 /**
@@ -105,5 +116,24 @@ class OrganizationServiceImpl @Inject constructor(
 
     override fun deleteOrganization(id: Long): Boolean {
         return organizationRepository.delete(id)
+    }
+
+    override fun updateOrganizationByUuid(
+        uuid: UUID,
+        name: String?,
+        description: String?,
+        contactInfo: com.revet.documents.domain.Organization.ContactInfo?,
+        locale: String?,
+        timezone: String?,
+        bucketId: Long?,
+        isActive: Boolean?
+    ): com.revet.documents.domain.Organization? {
+        val organization = organizationRepository.findByUuid(uuid) ?: return null
+        return updateOrganization(organization.id!!, name, description, contactInfo, locale, timezone, bucketId, isActive)
+    }
+
+    override fun deleteOrganizationByUuid(uuid: UUID): Boolean {
+        val organization = organizationRepository.findByUuid(uuid) ?: return false
+        return organizationRepository.delete(organization.id!!)
     }
 }

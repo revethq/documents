@@ -2,6 +2,7 @@ package com.revet.documents.service
 
 import com.revet.documents.domain.DocumentVersion
 import com.revet.documents.domain.UploadStatus
+import com.revet.documents.repository.DocumentRepository
 import com.revet.documents.repository.DocumentVersionRepository
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
@@ -15,6 +16,7 @@ interface DocumentVersionService {
     fun getVersionByUuid(uuid: UUID): com.revet.documents.domain.DocumentVersion?
     fun getVersionsByDocumentId(documentId: Long): List<com.revet.documents.domain.DocumentVersion>
     fun getLatestVersionByDocumentId(documentId: Long): com.revet.documents.domain.DocumentVersion?
+    fun getLatestVersionByDocumentUuid(uuid: UUID): com.revet.documents.domain.DocumentVersion?
     fun createVersion(
         documentId: Long,
         name: String,
@@ -43,7 +45,8 @@ interface DocumentVersionService {
  */
 @ApplicationScoped
 class DocumentVersionServiceImpl @Inject constructor(
-    private val documentVersionRepository: com.revet.documents.repository.DocumentVersionRepository
+    private val documentVersionRepository: com.revet.documents.repository.DocumentVersionRepository,
+    private val documentRepository: com.revet.documents.repository.DocumentRepository
 ) : com.revet.documents.service.DocumentVersionService {
 
     override fun getAllVersions(): List<com.revet.documents.domain.DocumentVersion> {
@@ -60,6 +63,11 @@ class DocumentVersionServiceImpl @Inject constructor(
 
     override fun getLatestVersionByDocumentId(documentId: Long): com.revet.documents.domain.DocumentVersion? {
         return documentVersionRepository.findLatestByDocumentId(documentId)
+    }
+
+    override fun getLatestVersionByDocumentUuid(uuid: UUID): com.revet.documents.domain.DocumentVersion? {
+        val document = documentRepository.findByUuid(uuid) ?: return null
+        return documentVersionRepository.findLatestByDocumentId(document.id!!)
     }
 
     override fun createVersion(
