@@ -39,6 +39,9 @@ dependencies {
     // OpenAPI and Swagger UI
     implementation("io.quarkus:quarkus-smallrye-openapi")
 
+    // JWT Authentication
+    implementation("io.quarkus:quarkus-smallrye-jwt")
+
     // Testing
     testImplementation("io.quarkus:quarkus-junit5")
     testImplementation("io.quarkus:quarkus-junit5-mockito")

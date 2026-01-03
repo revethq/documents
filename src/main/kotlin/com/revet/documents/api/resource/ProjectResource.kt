@@ -78,7 +78,7 @@ class ProjectResource @Inject constructor(
                 .entity(mapOf("error" to "Project not found"))
                 .build()
 
-        return Response.ok(_root_ide_package_.com.revet.documents.api.mapper.ProjectDTOMapper.toDTO(project)).build()
+        return Response.ok(ProjectDTOMapper.toDTO(project)).build()
     }
 
     @POST

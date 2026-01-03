@@ -22,6 +22,7 @@ class SecurityServiceTest {
     private lateinit var organizationPermissionService: OrganizationPermissionService
     private lateinit var documentService: DocumentService
     private lateinit var projectService: ProjectService
+    private lateinit var organizationService: OrganizationService
     private lateinit var securityService: SecurityService
 
     // Test data
@@ -66,13 +67,15 @@ class SecurityServiceTest {
         organizationPermissionService = mockk(relaxed = true)
         documentService = mockk(relaxed = true)
         projectService = mockk(relaxed = true)
+        organizationService = mockk(relaxed = true)
 
         securityService = SecurityServiceImpl(
             documentPermissionService,
             projectPermissionService,
             organizationPermissionService,
             documentService,
-            projectService
+            projectService,
+            organizationService
         )
 
         // Default: document and project exist
