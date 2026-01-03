@@ -49,31 +49,7 @@ class BucketResource @Inject constructor(
     }
 
     @GET
-    @Path("/{id}")
-    @Operation(summary = "Get bucket by ID", description = "Retrieve a single bucket configuration by its ID")
-    @APIResponses(
-        APIResponse(
-            responseCode = "200",
-            description = "Bucket found",
-            content = [Content(mediaType = MediaType.APPLICATION_JSON, schema = Schema(implementation = _root_ide_package_.com.revet.documents.dto.BucketDTO::class))]
-        ),
-        APIResponse(responseCode = "404", description = "Bucket not found")
-    )
-    fun getBucket(
-        @PathParam("id")
-        @Parameter(description = "Bucket ID")
-        id: Long
-    ): Response {
-        val bucket = bucketService.getBucketById(id)
-            ?: return Response.status(Response.Status.NOT_FOUND)
-                .entity(mapOf("error" to "Bucket not found"))
-                .build()
-
-        return Response.ok(_root_ide_package_.com.revet.documents.api.mapper.BucketDTOMapper.toDTO(bucket)).build()
-    }
-
-    @GET
-    @Path("/uuid/{uuid}")
+    @Path("/{uuid}")
     @Operation(summary = "Get bucket by UUID", description = "Retrieve a single bucket configuration by its UUID")
     @APIResponses(
         APIResponse(
@@ -83,7 +59,7 @@ class BucketResource @Inject constructor(
         ),
         APIResponse(responseCode = "404", description = "Bucket not found")
     )
-    fun getBucketByUuid(
+    fun getBucket(
         @PathParam("uuid")
         @Parameter(description = "Bucket UUID")
         uuid: UUID
@@ -130,7 +106,7 @@ class BucketResource @Inject constructor(
     }
 
     @PUT
-    @Path("/{id}")
+    @Path("/{uuid}")
     @Operation(summary = "Update bucket", description = "Update an existing bucket configuration")
     @APIResponses(
         APIResponse(
@@ -142,14 +118,14 @@ class BucketResource @Inject constructor(
         APIResponse(responseCode = "400", description = "Invalid request")
     )
     fun updateBucket(
-        @PathParam("id")
-        @Parameter(description = "Bucket ID")
-        id: Long,
+        @PathParam("uuid")
+        @Parameter(description = "Bucket UUID")
+        uuid: UUID,
         request: com.revet.documents.dto.UpdateBucketRequest
     ): Response {
         return try {
-            val bucket = bucketService.updateBucket(
-                id = id,
+            val bucket = bucketService.updateBucketByUuid(
+                uuid = uuid,
                 name = request.name,
                 bucketName = request.bucketName,
                 endpoint = request.endpoint,
@@ -171,18 +147,18 @@ class BucketResource @Inject constructor(
     }
 
     @DELETE
-    @Path("/{id}")
+    @Path("/{uuid}")
     @Operation(summary = "Delete bucket", description = "Soft delete a bucket configuration")
     @APIResponses(
         APIResponse(responseCode = "204", description = "Bucket deleted"),
         APIResponse(responseCode = "404", description = "Bucket not found")
     )
     fun deleteBucket(
-        @PathParam("id")
-        @Parameter(description = "Bucket ID")
-        id: Long
+        @PathParam("uuid")
+        @Parameter(description = "Bucket UUID")
+        uuid: UUID
     ): Response {
-        val deleted = bucketService.deleteBucket(id)
+        val deleted = bucketService.deleteBucketByUuid(uuid)
         return if (deleted) {
             Response.noContent().build()
         } else {

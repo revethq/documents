@@ -29,11 +29,24 @@ interface ProjectService {
         tags: Set<String>? = null,
         isActive: Boolean? = null
     ): com.revet.documents.domain.Project?
+    fun updateProjectByUuid(
+        uuid: UUID,
+        name: String? = null,
+        description: String? = null,
+        clientIds: Set<Long>? = null,
+        tags: Set<String>? = null,
+        isActive: Boolean? = null
+    ): com.revet.documents.domain.Project?
     fun addClientToProject(projectId: Long, clientId: Long): com.revet.documents.domain.Project?
+    fun addClientToProjectByUuid(uuid: UUID, clientId: Long): com.revet.documents.domain.Project?
     fun removeClientFromProject(projectId: Long, clientId: Long): com.revet.documents.domain.Project?
+    fun removeClientFromProjectByUuid(uuid: UUID, clientId: Long): com.revet.documents.domain.Project?
     fun addTagToProject(projectId: Long, tag: String): com.revet.documents.domain.Project?
+    fun addTagToProjectByUuid(uuid: UUID, tag: String): com.revet.documents.domain.Project?
     fun removeTagFromProject(projectId: Long, tag: String): com.revet.documents.domain.Project?
+    fun removeTagFromProjectByUuid(uuid: UUID, tag: String): com.revet.documents.domain.Project?
     fun deleteProject(id: Long): Boolean
+    fun deleteProjectByUuid(uuid: UUID): Boolean
 }
 
 /**
@@ -130,5 +143,42 @@ class ProjectServiceImpl @Inject constructor(
 
     override fun deleteProject(id: Long): Boolean {
         return projectRepository.delete(id)
+    }
+
+    override fun updateProjectByUuid(
+        uuid: UUID,
+        name: String?,
+        description: String?,
+        clientIds: Set<Long>?,
+        tags: Set<String>?,
+        isActive: Boolean?
+    ): com.revet.documents.domain.Project? {
+        val project = projectRepository.findByUuid(uuid) ?: return null
+        return updateProject(project.id!!, name, description, clientIds, tags, isActive)
+    }
+
+    override fun addClientToProjectByUuid(uuid: UUID, clientId: Long): com.revet.documents.domain.Project? {
+        val project = projectRepository.findByUuid(uuid) ?: return null
+        return addClientToProject(project.id!!, clientId)
+    }
+
+    override fun removeClientFromProjectByUuid(uuid: UUID, clientId: Long): com.revet.documents.domain.Project? {
+        val project = projectRepository.findByUuid(uuid) ?: return null
+        return removeClientFromProject(project.id!!, clientId)
+    }
+
+    override fun addTagToProjectByUuid(uuid: UUID, tag: String): com.revet.documents.domain.Project? {
+        val project = projectRepository.findByUuid(uuid) ?: return null
+        return addTagToProject(project.id!!, tag)
+    }
+
+    override fun removeTagFromProjectByUuid(uuid: UUID, tag: String): com.revet.documents.domain.Project? {
+        val project = projectRepository.findByUuid(uuid) ?: return null
+        return removeTagFromProject(project.id!!, tag)
+    }
+
+    override fun deleteProjectByUuid(uuid: UUID): Boolean {
+        val project = projectRepository.findByUuid(uuid) ?: return false
+        return projectRepository.delete(project.id!!)
     }
 }

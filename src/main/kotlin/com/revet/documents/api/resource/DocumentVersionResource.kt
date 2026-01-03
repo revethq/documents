@@ -6,6 +6,9 @@ import com.revet.documents.domain.UploadStatus
 import com.revet.documents.dto.CreateDocumentVersionRequest
 import com.revet.documents.dto.DocumentVersionDTO
 import com.revet.documents.dto.UpdateDocumentVersionRequest
+import com.revet.documents.domain.PermissionType
+import com.revet.documents.security.ResourceType
+import com.revet.documents.security.SecuredBy
 import com.revet.documents.service.DocumentService
 import com.revet.documents.service.DocumentVersionService
 import com.revet.documents.service.OrganizationService
@@ -63,6 +66,7 @@ class DocumentVersionResource @Inject constructor(
 
     @GET
     @Path("/{uuid}")
+    @SecuredBy(resource = ResourceType.DOCUMENT, permission = PermissionType.CAN_INVITE, viaDocumentVersion = true)
     @Operation(summary = "Get version by UUID", description = "Retrieve a single document version by its UUID, including a presigned download URL if available")
     @APIResponses(
         APIResponse(
@@ -70,7 +74,8 @@ class DocumentVersionResource @Inject constructor(
             description = "Version found",
             content = [Content(mediaType = MediaType.APPLICATION_JSON, schema = Schema(implementation = _root_ide_package_.com.revet.documents.dto.DocumentVersionDTO::class))]
         ),
-        APIResponse(responseCode = "404", description = "Version not found")
+        APIResponse(responseCode = "404", description = "Version not found"),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
     fun getVersion(
         @PathParam("uuid")
@@ -115,7 +120,8 @@ class DocumentVersionResource @Inject constructor(
     }
 
     @GET
-    @Path("/document/{documentId}/latest")
+    @Path("/document/{uuid}/latest")
+    @SecuredBy(resource = ResourceType.DOCUMENT, permission = PermissionType.CAN_INVITE)
     @Operation(summary = "Get latest version", description = "Retrieve the latest version of a document")
     @APIResponses(
         APIResponse(
@@ -123,14 +129,15 @@ class DocumentVersionResource @Inject constructor(
             description = "Latest version found",
             content = [Content(mediaType = MediaType.APPLICATION_JSON, schema = Schema(implementation = _root_ide_package_.com.revet.documents.dto.DocumentVersionDTO::class))]
         ),
-        APIResponse(responseCode = "404", description = "No versions found")
+        APIResponse(responseCode = "404", description = "No versions found"),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
     fun getLatestVersion(
-        @PathParam("documentId")
-        @Parameter(description = "Document ID")
-        documentId: Long
+        @PathParam("uuid")
+        @Parameter(description = "Document UUID")
+        uuid: UUID
     ): Response {
-        val version = documentVersionService.getLatestVersionByDocumentId(documentId)
+        val version = documentVersionService.getLatestVersionByDocumentUuid(uuid)
             ?: return Response.status(Response.Status.NOT_FOUND)
                 .entity(mapOf("error" to "No versions found for this document"))
                 .build()
@@ -173,6 +180,7 @@ class DocumentVersionResource @Inject constructor(
 
     @PUT
     @Path("/{uuid}")
+    @SecuredBy(resource = ResourceType.DOCUMENT, permission = PermissionType.CAN_CREATE, viaDocumentVersion = true)
     @Operation(summary = "Update version", description = "Update an existing document version")
     @APIResponses(
         APIResponse(
@@ -181,7 +189,8 @@ class DocumentVersionResource @Inject constructor(
             content = [Content(mediaType = MediaType.APPLICATION_JSON, schema = Schema(implementation = _root_ide_package_.com.revet.documents.dto.DocumentVersionDTO::class))]
         ),
         APIResponse(responseCode = "404", description = "Version not found"),
-        APIResponse(responseCode = "400", description = "Invalid request")
+        APIResponse(responseCode = "400", description = "Invalid request"),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
     fun updateVersion(
         @PathParam("uuid")
@@ -212,6 +221,7 @@ class DocumentVersionResource @Inject constructor(
 
     @PUT
     @Path("/{uuid}/complete-upload")
+    @SecuredBy(resource = ResourceType.DOCUMENT, permission = PermissionType.CAN_CREATE, viaDocumentVersion = true)
     @Operation(summary = "Complete upload", description = "Mark a pending upload as completed after verifying file exists in storage")
     @APIResponses(
         APIResponse(
@@ -220,7 +230,8 @@ class DocumentVersionResource @Inject constructor(
             content = [Content(mediaType = MediaType.APPLICATION_JSON, schema = Schema(implementation = _root_ide_package_.com.revet.documents.dto.DocumentVersionDTO::class))]
         ),
         APIResponse(responseCode = "404", description = "Version not found"),
-        APIResponse(responseCode = "400", description = "Invalid state or file not found in storage")
+        APIResponse(responseCode = "400", description = "Invalid state or file not found in storage"),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
     fun completeUpload(
         @PathParam("uuid")
@@ -298,10 +309,12 @@ class DocumentVersionResource @Inject constructor(
 
     @DELETE
     @Path("/{uuid}")
+    @SecuredBy(resource = ResourceType.DOCUMENT, permission = PermissionType.CAN_MANAGE, viaDocumentVersion = true)
     @Operation(summary = "Delete version", description = "Delete a document version")
     @APIResponses(
         APIResponse(responseCode = "204", description = "Version deleted"),
-        APIResponse(responseCode = "404", description = "Version not found")
+        APIResponse(responseCode = "404", description = "Version not found"),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
     fun deleteVersion(
         @PathParam("uuid")

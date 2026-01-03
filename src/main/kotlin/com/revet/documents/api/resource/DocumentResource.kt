@@ -3,8 +3,11 @@ package com.revet.documents.api.resource
 import com.revet.documents.api.mapper.DocumentDTOMapper
 import com.revet.documents.api.mapper.PageDTOMapper
 import com.revet.documents.domain.PageRequest
+import com.revet.documents.domain.PermissionType
 import com.revet.documents.domain.Sort
 import com.revet.documents.dto.*
+import com.revet.documents.security.ResourceType
+import com.revet.documents.security.SecuredBy
 import com.revet.documents.service.CategoryService
 import com.revet.documents.service.DocumentService
 import com.revet.documents.service.DocumentVersionService
@@ -198,31 +201,8 @@ class DocumentResource @Inject constructor(
     }
 
     @GET
-    @Path("/{id}")
-    @Operation(summary = "Get document by ID", description = "Retrieve a single document by its ID")
-    @APIResponses(
-        APIResponse(
-            responseCode = "200",
-            description = "Document found",
-            content = [Content(mediaType = MediaType.APPLICATION_JSON, schema = Schema(implementation = _root_ide_package_.com.revet.documents.dto.DocumentDTO::class))]
-        ),
-        APIResponse(responseCode = "404", description = "Document not found")
-    )
-    fun getDocument(
-        @PathParam("id")
-        @Parameter(description = "Document ID")
-        id: Long
-    ): Response {
-        val document = documentService.getDocumentById(id)
-            ?: return Response.status(Response.Status.NOT_FOUND)
-                .entity(mapOf("error" to "Document not found"))
-                .build()
-
-        return Response.ok(_root_ide_package_.com.revet.documents.api.mapper.DocumentDTOMapper.toDTO(document)).build()
-    }
-
-    @GET
-    @Path("/uuid/{uuid}")
+    @Path("/{uuid}")
+    @SecuredBy(resource = ResourceType.DOCUMENT, permission = PermissionType.CAN_INVITE)
     @Operation(summary = "Get document by UUID", description = "Retrieve a single document by its UUID")
     @APIResponses(
         APIResponse(
@@ -230,9 +210,10 @@ class DocumentResource @Inject constructor(
             description = "Document found",
             content = [Content(mediaType = MediaType.APPLICATION_JSON, schema = Schema(implementation = _root_ide_package_.com.revet.documents.dto.DocumentDTO::class))]
         ),
-        APIResponse(responseCode = "404", description = "Document not found")
+        APIResponse(responseCode = "404", description = "Document not found"),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
-    fun getDocumentByUuid(
+    fun getDocument(
         @PathParam("uuid")
         @Parameter(description = "Document UUID")
         uuid: UUID
@@ -247,6 +228,7 @@ class DocumentResource @Inject constructor(
 
     @GET
     @Path("/{uuid}/download")
+    @SecuredBy(resource = ResourceType.DOCUMENT, permission = PermissionType.CAN_INVITE)
     @Operation(summary = "Get download URL for latest document version", description = "Generate a presigned download URL for the latest version of a document")
     @APIResponses(
         APIResponse(
@@ -255,7 +237,8 @@ class DocumentResource @Inject constructor(
             content = [Content(mediaType = MediaType.APPLICATION_JSON, schema = Schema(implementation = _root_ide_package_.com.revet.documents.dto.PresignedDownloadResponse::class))]
         ),
         APIResponse(responseCode = "404", description = "Document or version not found"),
-        APIResponse(responseCode = "400", description = "File not available for download")
+        APIResponse(responseCode = "400", description = "File not available for download"),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
     fun downloadLatestVersion(
         @PathParam("uuid")
@@ -339,7 +322,8 @@ class DocumentResource @Inject constructor(
     }
 
     @PUT
-    @Path("/{id}")
+    @Path("/{uuid}")
+    @SecuredBy(resource = ResourceType.DOCUMENT, permission = PermissionType.CAN_CREATE)
     @Operation(summary = "Update document", description = "Update an existing document")
     @APIResponses(
         APIResponse(
@@ -348,17 +332,18 @@ class DocumentResource @Inject constructor(
             content = [Content(mediaType = MediaType.APPLICATION_JSON, schema = Schema(implementation = _root_ide_package_.com.revet.documents.dto.DocumentDTO::class))]
         ),
         APIResponse(responseCode = "404", description = "Document not found"),
-        APIResponse(responseCode = "400", description = "Invalid request")
+        APIResponse(responseCode = "400", description = "Invalid request"),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
     fun updateDocument(
-        @PathParam("id")
-        @Parameter(description = "Document ID")
-        id: Long,
+        @PathParam("uuid")
+        @Parameter(description = "Document UUID")
+        uuid: UUID,
         request: com.revet.documents.dto.UpdateDocumentRequest
     ): Response {
         return try {
-            val document = documentService.updateDocument(
-                id = id,
+            val document = documentService.updateDocumentByUuid(
+                uuid = uuid,
                 name = request.name,
                 categoryId = request.categoryId,
                 mime = request.mime,
@@ -377,7 +362,8 @@ class DocumentResource @Inject constructor(
     }
 
     @POST
-    @Path("/{id}/tags")
+    @Path("/{uuid}/tags")
+    @SecuredBy(resource = ResourceType.DOCUMENT, permission = PermissionType.CAN_CREATE)
     @Operation(summary = "Add tag to document", description = "Add a tag to the document")
     @APIResponses(
         APIResponse(
@@ -385,16 +371,17 @@ class DocumentResource @Inject constructor(
             description = "Tag added",
             content = [Content(mediaType = MediaType.APPLICATION_JSON, schema = Schema(implementation = _root_ide_package_.com.revet.documents.dto.DocumentDTO::class))]
         ),
-        APIResponse(responseCode = "404", description = "Document not found")
+        APIResponse(responseCode = "404", description = "Document not found"),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
     fun addTag(
-        @PathParam("id")
-        @Parameter(description = "Document ID")
-        id: Long,
+        @PathParam("uuid")
+        @Parameter(description = "Document UUID")
+        uuid: UUID,
         request: com.revet.documents.dto.AddTagRequest
     ): Response {
         return try {
-            val document = documentService.addTagToDocument(id, request.tag)
+            val document = documentService.addTagToDocumentByUuid(uuid, request.tag)
                 ?: return Response.status(Response.Status.NOT_FOUND)
                     .entity(mapOf("error" to "Document not found"))
                     .build()
@@ -408,7 +395,8 @@ class DocumentResource @Inject constructor(
     }
 
     @DELETE
-    @Path("/{id}/tags/{tag}")
+    @Path("/{uuid}/tags/{tag}")
+    @SecuredBy(resource = ResourceType.DOCUMENT, permission = PermissionType.CAN_CREATE)
     @Operation(summary = "Remove tag from document", description = "Remove a tag from the document")
     @APIResponses(
         APIResponse(
@@ -416,17 +404,18 @@ class DocumentResource @Inject constructor(
             description = "Tag removed",
             content = [Content(mediaType = MediaType.APPLICATION_JSON, schema = Schema(implementation = _root_ide_package_.com.revet.documents.dto.DocumentDTO::class))]
         ),
-        APIResponse(responseCode = "404", description = "Document not found")
+        APIResponse(responseCode = "404", description = "Document not found"),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
     fun removeTag(
-        @PathParam("id")
-        @Parameter(description = "Document ID")
-        id: Long,
+        @PathParam("uuid")
+        @Parameter(description = "Document UUID")
+        uuid: UUID,
         @PathParam("tag")
         @Parameter(description = "Tag to remove")
         tag: String
     ): Response {
-        val document = documentService.removeTagFromDocument(id, tag)
+        val document = documentService.removeTagFromDocumentByUuid(uuid, tag)
             ?: return Response.status(Response.Status.NOT_FOUND)
                 .entity(mapOf("error" to "Document not found"))
                 .build()
@@ -435,18 +424,20 @@ class DocumentResource @Inject constructor(
     }
 
     @DELETE
-    @Path("/{id}")
+    @Path("/{uuid}")
+    @SecuredBy(resource = ResourceType.DOCUMENT, permission = PermissionType.CAN_MANAGE)
     @Operation(summary = "Delete document", description = "Soft delete a document")
     @APIResponses(
         APIResponse(responseCode = "204", description = "Document deleted"),
-        APIResponse(responseCode = "404", description = "Document not found")
+        APIResponse(responseCode = "404", description = "Document not found"),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
     fun deleteDocument(
-        @PathParam("id")
-        @Parameter(description = "Document ID")
-        id: Long
+        @PathParam("uuid")
+        @Parameter(description = "Document UUID")
+        uuid: UUID
     ): Response {
-        val deleted = documentService.deleteDocument(id)
+        val deleted = documentService.deleteDocumentByUuid(uuid)
         return if (deleted) {
             Response.noContent().build()
         } else {

@@ -34,9 +34,20 @@ interface DocumentService {
         tags: Set<String>? = null,
         isActive: Boolean? = null
     ): com.revet.documents.domain.Document?
+    fun updateDocumentByUuid(
+        uuid: UUID,
+        name: String? = null,
+        categoryId: Long? = null,
+        mime: String? = null,
+        tags: Set<String>? = null,
+        isActive: Boolean? = null
+    ): com.revet.documents.domain.Document?
     fun addTagToDocument(documentId: Long, tag: String): com.revet.documents.domain.Document?
+    fun addTagToDocumentByUuid(uuid: UUID, tag: String): com.revet.documents.domain.Document?
     fun removeTagFromDocument(documentId: Long, tag: String): com.revet.documents.domain.Document?
+    fun removeTagFromDocumentByUuid(uuid: UUID, tag: String): com.revet.documents.domain.Document?
     fun deleteDocument(id: Long): Boolean
+    fun deleteDocumentByUuid(uuid: UUID): Boolean
 
     fun getDocumentsPaginated(
         pageRequest: com.revet.documents.domain.PageRequest,
@@ -182,6 +193,37 @@ class DocumentServiceImpl @Inject constructor(
 
     override fun deleteDocument(id: Long): Boolean {
         return documentRepository.delete(id)
+    }
+
+    @Transactional
+    override fun updateDocumentByUuid(
+        uuid: UUID,
+        name: String?,
+        categoryId: Long?,
+        mime: String?,
+        tags: Set<String>?,
+        isActive: Boolean?
+    ): com.revet.documents.domain.Document? {
+        val document = documentRepository.findByUuid(uuid) ?: return null
+        return updateDocument(document.id!!, name, categoryId, mime, tags, isActive)
+    }
+
+    @Transactional
+    override fun addTagToDocumentByUuid(uuid: UUID, tag: String): com.revet.documents.domain.Document? {
+        val document = documentRepository.findByUuid(uuid) ?: return null
+        return addTagToDocument(document.id!!, tag)
+    }
+
+    @Transactional
+    override fun removeTagFromDocumentByUuid(uuid: UUID, tag: String): com.revet.documents.domain.Document? {
+        val document = documentRepository.findByUuid(uuid) ?: return null
+        return removeTagFromDocument(document.id!!, tag)
+    }
+
+    @Transactional
+    override fun deleteDocumentByUuid(uuid: UUID): Boolean {
+        val document = documentRepository.findByUuid(uuid) ?: return false
+        return documentRepository.delete(document.id!!)
     }
 
     override fun getDocumentsPaginated(

@@ -48,31 +48,7 @@ class UserResource @Inject constructor(
     }
 
     @GET
-    @Path("/{id}")
-    @Operation(summary = "Get user by ID", description = "Retrieve a single user by their ID")
-    @APIResponses(
-        APIResponse(
-            responseCode = "200",
-            description = "User found",
-            content = [Content(mediaType = MediaType.APPLICATION_JSON, schema = Schema(implementation = _root_ide_package_.com.revet.documents.dto.UserDTO::class))]
-        ),
-        APIResponse(responseCode = "404", description = "User not found")
-    )
-    fun getUser(
-        @PathParam("id")
-        @Parameter(description = "User ID")
-        id: Long
-    ): Response {
-        val user = userService.getUserById(id)
-            ?: return Response.status(Response.Status.NOT_FOUND)
-                .entity(mapOf("error" to "User not found"))
-                .build()
-
-        return Response.ok(_root_ide_package_.com.revet.documents.api.mapper.UserDTOMapper.toDTO(user)).build()
-    }
-
-    @GET
-    @Path("/uuid/{uuid}")
+    @Path("/{uuid}")
     @Operation(summary = "Get user by UUID", description = "Retrieve a single user by their UUID")
     @APIResponses(
         APIResponse(
@@ -82,7 +58,7 @@ class UserResource @Inject constructor(
         ),
         APIResponse(responseCode = "404", description = "User not found")
     )
-    fun getUserByUuid(
+    fun getUser(
         @PathParam("uuid")
         @Parameter(description = "User UUID")
         uuid: UUID
@@ -175,7 +151,7 @@ class UserResource @Inject constructor(
     }
 
     @PUT
-    @Path("/{id}")
+    @Path("/{uuid}")
     @Operation(summary = "Update user", description = "Update an existing user")
     @APIResponses(
         APIResponse(
@@ -187,20 +163,20 @@ class UserResource @Inject constructor(
         APIResponse(responseCode = "400", description = "Invalid request")
     )
     fun updateUser(
-        @PathParam("id")
-        @Parameter(description = "User ID")
-        id: Long,
+        @PathParam("uuid")
+        @Parameter(description = "User UUID")
+        uuid: UUID,
         request: com.revet.documents.dto.UpdateUserRequest
     ): Response {
         return try {
-            val existing = userService.getUserById(id)
+            val existing = userService.getUserByUuid(uuid)
                 ?: return Response.status(Response.Status.NOT_FOUND)
                     .entity(mapOf("error" to "User not found"))
                     .build()
 
             val profile = _root_ide_package_.com.revet.documents.api.mapper.UserDTOMapper.toUserProfile(request, existing.profile)
-            val user = userService.updateUser(
-                id = id,
+            val user = userService.updateUserByUuid(
+                uuid = uuid,
                 email = request.email,
                 firstName = request.firstName,
                 lastName = request.lastName,
@@ -221,18 +197,18 @@ class UserResource @Inject constructor(
     }
 
     @DELETE
-    @Path("/{id}")
+    @Path("/{uuid}")
     @Operation(summary = "Delete user", description = "Soft delete a user")
     @APIResponses(
         APIResponse(responseCode = "204", description = "User deleted"),
         APIResponse(responseCode = "404", description = "User not found")
     )
     fun deleteUser(
-        @PathParam("id")
-        @Parameter(description = "User ID")
-        id: Long
+        @PathParam("uuid")
+        @Parameter(description = "User UUID")
+        uuid: UUID
     ): Response {
-        val deleted = userService.deleteUser(id)
+        val deleted = userService.deleteUserByUuid(uuid)
         return if (deleted) {
             Response.noContent().build()
         } else {

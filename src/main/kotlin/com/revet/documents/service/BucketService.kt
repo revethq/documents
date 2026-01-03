@@ -35,7 +35,19 @@ interface BucketService {
         presignedUrlDurationMinutes: Int? = null,
         isActive: Boolean? = null
     ): com.revet.documents.domain.Bucket?
+    fun updateBucketByUuid(
+        uuid: UUID,
+        name: String? = null,
+        bucketName: String? = null,
+        endpoint: String? = null,
+        region: String? = null,
+        accessKey: String? = null,
+        secretKey: String? = null,
+        presignedUrlDurationMinutes: Int? = null,
+        isActive: Boolean? = null
+    ): com.revet.documents.domain.Bucket?
     fun deleteBucket(id: Long): Boolean
+    fun deleteBucketByUuid(uuid: UUID): Boolean
 }
 
 /**
@@ -128,5 +140,25 @@ class BucketServiceImpl @Inject constructor(
 
     override fun deleteBucket(id: Long): Boolean {
         return bucketRepository.delete(id)
+    }
+
+    override fun updateBucketByUuid(
+        uuid: UUID,
+        name: String?,
+        bucketName: String?,
+        endpoint: String?,
+        region: String?,
+        accessKey: String?,
+        secretKey: String?,
+        presignedUrlDurationMinutes: Int?,
+        isActive: Boolean?
+    ): com.revet.documents.domain.Bucket? {
+        val bucket = bucketRepository.findByUuid(uuid) ?: return null
+        return updateBucket(bucket.id!!, name, bucketName, endpoint, region, accessKey, secretKey, presignedUrlDurationMinutes, isActive)
+    }
+
+    override fun deleteBucketByUuid(uuid: UUID): Boolean {
+        val bucket = bucketRepository.findByUuid(uuid) ?: return false
+        return bucketRepository.delete(bucket.id!!)
     }
 }

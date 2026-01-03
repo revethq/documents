@@ -90,13 +90,88 @@ UNIQUE(document_id, user_id)
 
 Each user can have **at most one** permission entry per resource. The entry specifies their highest explicit permission on that resource.
 
+## @SecuredBy Annotation
+
+The recommended way to enforce permissions is the `@SecuredBy` annotation:
+
+```kotlin
+@SecuredBy(resource = ResourceType.DOCUMENT, permission = PermissionType.CAN_CREATE)
+```
+
+### Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `resource` | `ResourceType` | The type of resource: `DOCUMENT`, `PROJECT`, or `ORGANIZATION` |
+| `permission` | `PermissionType` | Minimum required permission: `CAN_INVITE`, `CAN_CREATE`, or `CAN_MANAGE` |
+
+### Usage Example
+
+```kotlin
+@Path("/api/v1/documents")
+class DocumentResource @Inject constructor(
+    private val documentService: DocumentService
+) {
+    @PUT
+    @Path("/{uuid}")
+    @SecuredBy(resource = ResourceType.DOCUMENT, permission = PermissionType.CAN_CREATE)
+    fun updateDocument(
+        @PathParam("uuid") uuid: UUID,
+        request: UpdateDocumentRequest
+    ): Response {
+        // Only runs if user has CAN_CREATE permission on this document
+        // (or inherited from project/organization)
+        val document = documentService.updateDocument(uuid, request)
+        return Response.ok(document).build()
+    }
+
+    @DELETE
+    @Path("/{uuid}")
+    @SecuredBy(resource = ResourceType.DOCUMENT, permission = PermissionType.CAN_MANAGE)
+    fun deleteDocument(@PathParam("uuid") uuid: UUID): Response {
+        // Requires CAN_MANAGE permission
+        documentService.deleteDocument(uuid)
+        return Response.noContent().build()
+    }
+
+    @GET
+    @Path("/{uuid}")
+    @SecuredBy(resource = ResourceType.DOCUMENT, permission = PermissionType.CAN_INVITE)
+    fun getDocument(@PathParam("uuid") uuid: UUID): Response {
+        // CAN_INVITE is the minimum - allows read access
+        val document = documentService.getDocumentByUuid(uuid)
+        return Response.ok(document).build()
+    }
+}
+```
+
+### How It Works
+
+1. The `SecuredByInterceptor` intercepts methods annotated with `@SecuredBy`
+2. Extracts the resource UUID from `@PathParam("uuid")`
+3. Gets the current user ID from the JWT `sub` claim via `CurrentUserService`
+4. Calls `SecurityService.canAccess*ByUuid()` to check permission with inheritance
+5. Returns **403 Forbidden** if permission is denied
+6. Proceeds with the method if permission is granted
+
+### Requirements
+
+- Method must have a `@PathParam("uuid")` parameter of type `UUID`
+- User must be authenticated (JWT with `sub` claim containing user UUID)
+- The annotation uses CDI interceptors, so the class must be a CDI bean
+
 ## SecurityService API
 
-The `SecurityService` provides permission checking with inheritance:
+For programmatic permission checks, use `SecurityService` directly:
 
 ```kotlin
 interface SecurityService {
-    // Check if user has required permission (with inheritance)
+    // UUID-based methods (preferred for API layer)
+    fun canAccessDocumentByUuid(userId: Long, documentUuid: UUID, requiredPermission: PermissionType): Boolean
+    fun canAccessProjectByUuid(userId: Long, projectUuid: UUID, requiredPermission: PermissionType): Boolean
+    fun canAccessOrganizationByUuid(userId: Long, organizationUuid: UUID, requiredPermission: PermissionType): Boolean
+
+    // Long ID-based methods (for internal use)
     fun canAccessDocument(userId: Long, documentId: Long, requiredPermission: PermissionType): Boolean
     fun canAccessProject(userId: Long, projectId: Long, requiredPermission: PermissionType): Boolean
     fun canAccessOrganization(userId: Long, organizationId: Long, requiredPermission: PermissionType): Boolean
@@ -105,34 +180,6 @@ interface SecurityService {
     fun getEffectiveDocumentPermission(userId: Long, documentId: Long): PermissionType?
     fun getEffectiveProjectPermission(userId: Long, projectId: Long): PermissionType?
     fun getOrganizationPermission(userId: Long, organizationId: Long): PermissionType?
-}
-```
-
-### Usage Example
-
-```kotlin
-@Path("/api/v1/documents")
-class DocumentResource @Inject constructor(
-    private val securityService: SecurityService,
-    private val documentService: DocumentService
-) {
-    @PUT
-    @Path("/{id}")
-    fun updateDocument(
-        @PathParam("id") id: Long,
-        request: UpdateDocumentRequest,
-        @Context securityIdentity: SecurityIdentity
-    ): Response {
-        val userId = securityIdentity.principal.name.toLong()
-
-        if (!securityService.canAccessDocument(userId, id, PermissionType.CAN_CREATE)) {
-            return Response.status(Response.Status.FORBIDDEN)
-                .entity(mapOf("error" to "Insufficient permissions"))
-                .build()
-        }
-
-        // Proceed with update...
-    }
 }
 ```
 
