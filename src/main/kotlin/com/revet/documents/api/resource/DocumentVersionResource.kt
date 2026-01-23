@@ -6,9 +6,8 @@ import com.revet.documents.domain.UploadStatus
 import com.revet.documents.dto.CreateDocumentVersionRequest
 import com.revet.documents.dto.DocumentVersionDTO
 import com.revet.documents.dto.UpdateDocumentVersionRequest
-import com.revet.documents.domain.PermissionType
-import com.revet.documents.security.ResourceType
-import com.revet.documents.security.SecuredBy
+import com.revet.documents.permission.Actions
+import com.revethq.iam.permission.web.filter.RequiresPermission
 import com.revet.documents.service.DocumentService
 import com.revet.documents.service.DocumentVersionService
 import com.revet.documents.service.OrganizationService
@@ -66,7 +65,7 @@ class DocumentVersionResource @Inject constructor(
 
     @GET
     @Path("/{uuid}")
-    @SecuredBy(resource = ResourceType.DOCUMENT, permission = PermissionType.CAN_INVITE, viaDocumentVersion = true)
+    @RequiresPermission(action = Actions.DocumentVersion.GET, resource = "urn:revet:documents:{tenantId}:document-version/{uuid}")
     @Operation(summary = "Get version by UUID", description = "Retrieve a single document version by its UUID, including a presigned download URL if available")
     @APIResponses(
         APIResponse(
@@ -121,7 +120,7 @@ class DocumentVersionResource @Inject constructor(
 
     @GET
     @Path("/document/{uuid}/latest")
-    @SecuredBy(resource = ResourceType.DOCUMENT, permission = PermissionType.CAN_INVITE)
+    @RequiresPermission(action = Actions.DocumentVersion.GET, resource = "urn:revet:documents:{tenantId}:document/{uuid}")
     @Operation(summary = "Get latest version", description = "Retrieve the latest version of a document")
     @APIResponses(
         APIResponse(
@@ -180,7 +179,7 @@ class DocumentVersionResource @Inject constructor(
 
     @PUT
     @Path("/{uuid}")
-    @SecuredBy(resource = ResourceType.DOCUMENT, permission = PermissionType.CAN_CREATE, viaDocumentVersion = true)
+    @RequiresPermission(action = Actions.DocumentVersion.UPDATE, resource = "urn:revet:documents:{tenantId}:document-version/{uuid}")
     @Operation(summary = "Update version", description = "Update an existing document version")
     @APIResponses(
         APIResponse(
@@ -221,7 +220,7 @@ class DocumentVersionResource @Inject constructor(
 
     @PUT
     @Path("/{uuid}/complete-upload")
-    @SecuredBy(resource = ResourceType.DOCUMENT, permission = PermissionType.CAN_CREATE, viaDocumentVersion = true)
+    @RequiresPermission(action = Actions.DocumentVersion.COMPLETE_UPLOAD, resource = "urn:revet:documents:{tenantId}:document-version/{uuid}")
     @Operation(summary = "Complete upload", description = "Mark a pending upload as completed after verifying file exists in storage")
     @APIResponses(
         APIResponse(
@@ -309,7 +308,7 @@ class DocumentVersionResource @Inject constructor(
 
     @DELETE
     @Path("/{uuid}")
-    @SecuredBy(resource = ResourceType.DOCUMENT, permission = PermissionType.CAN_MANAGE, viaDocumentVersion = true)
+    @RequiresPermission(action = Actions.DocumentVersion.DELETE, resource = "urn:revet:documents:{tenantId}:document-version/{uuid}")
     @Operation(summary = "Delete version", description = "Delete a document version")
     @APIResponses(
         APIResponse(responseCode = "204", description = "Version deleted"),

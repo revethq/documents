@@ -28,13 +28,10 @@ class ProjectEntity : PanacheEntity() {
     @JoinColumn(name = "organization_id", nullable = false)
     var organization: com.revet.documents.repository.entity.OrganizationEntity? = null
 
-    @ManyToMany
-    @JoinTable(
-        name = "project_clients",
-        joinColumns = [JoinColumn(name = "project_id")],
-        inverseJoinColumns = [JoinColumn(name = "user_id")]
-    )
-    var clients: MutableSet<com.revet.documents.repository.entity.UserEntity> = mutableSetOf()
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "project_clients", joinColumns = [JoinColumn(name = "project_id")])
+    @Column(name = "user_id")
+    var clientIds: MutableSet<UUID> = mutableSetOf()
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "project_tags", joinColumns = [JoinColumn(name = "project_id")])

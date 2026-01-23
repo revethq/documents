@@ -16,7 +16,7 @@ data class DocumentVersion(
     val size: Int,
     val description: String?,
     val mime: String?,
-    val userId: Int?,
+    val userId: UUID?,
     val uploadStatus: com.revet.documents.domain.UploadStatus,
     val created: OffsetDateTime,
     val changed: OffsetDateTime
@@ -30,7 +30,7 @@ data class DocumentVersion(
             file: String? = null,
             description: String? = null,
             mime: String? = null,
-            userId: Int? = null,
+            userId: UUID? = null,
             uploadStatus: com.revet.documents.domain.UploadStatus = _root_ide_package_.com.revet.documents.domain.UploadStatus.PENDING
         ): DocumentVersion {
             val now = OffsetDateTime.now()

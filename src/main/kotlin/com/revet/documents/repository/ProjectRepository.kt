@@ -3,7 +3,6 @@ package com.revet.documents.repository
 import com.revet.documents.domain.Project
 import com.revet.documents.repository.entity.OrganizationEntity
 import com.revet.documents.repository.entity.ProjectEntity
-import com.revet.documents.repository.entity.UserEntity
 import com.revet.documents.repository.mapper.ProjectMapper
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
@@ -67,10 +66,7 @@ class ProjectRepositoryImpl : com.revet.documents.repository.ProjectRepository {
             newEntity.organization = organization
 
             // Set clients
-            if (project.clientIds.isNotEmpty()) {
-                val clients = _root_ide_package_.com.revet.documents.repository.entity.UserEntity.list("id in ?1", project.clientIds).toMutableSet()
-                newEntity.clients = clients
-            }
+            newEntity.clientIds = project.clientIds.toMutableSet()
 
             newEntity.persist()
             newEntity
@@ -82,11 +78,7 @@ class ProjectRepositoryImpl : com.revet.documents.repository.ProjectRepository {
             _root_ide_package_.com.revet.documents.repository.mapper.ProjectMapper.updateEntity(existing, project)
 
             // Update clients
-            existing.clients.clear()
-            if (project.clientIds.isNotEmpty()) {
-                val clients = _root_ide_package_.com.revet.documents.repository.entity.UserEntity.list("id in ?1", project.clientIds)
-                existing.clients.addAll(clients)
-            }
+            existing.clientIds = project.clientIds.toMutableSet()
 
             existing
         }

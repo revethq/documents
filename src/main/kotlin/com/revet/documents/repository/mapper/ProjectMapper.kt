@@ -3,7 +3,6 @@ package com.revet.documents.repository.mapper
 import com.revet.documents.domain.Project
 import com.revet.documents.repository.entity.ProjectEntity
 import com.revet.documents.repository.entity.OrganizationEntity
-import com.revet.documents.repository.entity.UserEntity
 
 /**
  * Maps between Domain Project and ProjectEntity (Panache).
@@ -18,7 +17,7 @@ object ProjectMapper {
             description = entity.description,
             organizationId = entity.organization?.id
                 ?: throw IllegalStateException("Project must have an organization"),
-            clientIds = entity.clients.mapNotNull { it.id }.toSet(),
+            clientIds = entity.clientIds.toSet(),
             tags = entity.tags.toSet(),
             isActive = entity.isActive,
             timestamps = _root_ide_package_.com.revet.documents.domain.Project.Timestamps(

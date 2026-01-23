@@ -3,7 +3,6 @@ package com.revet.documents.repository
 import com.revet.documents.domain.DocumentVersion
 import com.revet.documents.repository.entity.DocumentEntity
 import com.revet.documents.repository.entity.DocumentVersionEntity
-import com.revet.documents.repository.entity.UserEntity
 import com.revet.documents.repository.mapper.DocumentVersionMapper
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
@@ -60,13 +59,6 @@ class DocumentVersionRepositoryImpl : com.revet.documents.repository.DocumentVer
                 val document = _root_ide_package_.com.revet.documents.repository.entity.DocumentEntity.findById(docId)
                     ?: throw IllegalArgumentException("Document with id $docId not found")
                 newEntity.document = document
-            }
-
-            // Set user if provided
-            documentVersion.userId?.let { userId ->
-                val user = _root_ide_package_.com.revet.documents.repository.entity.UserEntity.findById(userId.toLong())
-                    ?: throw IllegalArgumentException("User with id $userId not found")
-                newEntity.user = user
             }
 
             newEntity.persist()

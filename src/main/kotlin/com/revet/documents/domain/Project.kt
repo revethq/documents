@@ -14,7 +14,7 @@ data class Project(
     val name: String,
     val description: String?,
     val organizationId: Long,
-    val clientIds: Set<Long>,
+    val clientIds: Set<UUID>,
     val tags: Set<String>,
     val isActive: Boolean,
     val timestamps: Timestamps
@@ -30,7 +30,7 @@ data class Project(
             name: String,
             organizationId: Long,
             description: String? = null,
-            clientIds: Set<Long> = emptySet(),
+            clientIds: Set<UUID> = emptySet(),
             tags: Set<String> = emptySet()
         ): Project {
             val now = LocalDateTime.now()
@@ -55,7 +55,7 @@ data class Project(
     fun update(
         name: String? = null,
         description: String? = null,
-        clientIds: Set<Long>? = null,
+        clientIds: Set<UUID>? = null,
         tags: Set<String>? = null,
         isActive: Boolean? = null
     ): Project {
@@ -79,14 +79,14 @@ data class Project(
         )
     }
 
-    fun addClient(clientId: Long): Project {
+    fun addClient(clientId: UUID): Project {
         return this.copy(
             clientIds = this.clientIds + clientId,
             timestamps = this.timestamps.copy(modifiedAt = LocalDateTime.now())
         )
     }
 
-    fun removeClient(clientId: Long): Project {
+    fun removeClient(clientId: UUID): Project {
         return this.copy(
             clientIds = this.clientIds - clientId,
             timestamps = this.timestamps.copy(modifiedAt = LocalDateTime.now())

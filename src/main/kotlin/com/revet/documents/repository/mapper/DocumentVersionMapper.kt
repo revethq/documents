@@ -18,7 +18,7 @@ object DocumentVersionMapper {
             size = entity.size,
             description = entity.description,
             mime = entity.mime,
-            userId = entity.user?.id?.toInt(),
+            userId = entity.userId,
             uploadStatus = entity.uploadStatus,
             created = entity.created,
             changed = entity.changed
@@ -34,6 +34,7 @@ object DocumentVersionMapper {
             this.size = domain.size
             this.description = domain.description
             this.mime = domain.mime
+            this.userId = domain.userId
             this.uploadStatus = domain.uploadStatus
             this.created = domain.created
             this.changed = domain.changed

@@ -41,9 +41,8 @@ class DocumentVersionEntity : PanacheEntityBase {
     @Column(length = 255)
     var mime: String? = null
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    var user: com.revet.documents.repository.entity.UserEntity? = null
+    @Column(name = "user_id")
+    var userId: UUID? = null
 
     @Enumerated(EnumType.STRING)
     @Column(name = "upload_status", nullable = false)

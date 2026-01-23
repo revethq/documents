@@ -21,5 +21,5 @@ data class PageDTO<T>(
     val page: Int,
     val size: Int,
     val hasMore: Boolean,
-    val warnings: List<com.revet.documents.dto.ProblemDetail> = emptyList()
+    val warnings: List<ProblemDetail> = emptyList()
 )

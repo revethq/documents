@@ -16,7 +16,7 @@ data class DocumentVersionDTO(
     val size: Int,
     val description: String?,
     val mime: String?,
-    val userId: Int?,
+    val userId: UUID?,
     val uploadStatus: com.revet.documents.domain.UploadStatus,
     val created: OffsetDateTime,
     val changed: OffsetDateTime,
@@ -31,7 +31,7 @@ data class CreateDocumentVersionRequest(
     val file: String? = null,
     val description: String? = null,
     val mime: String? = null,
-    val userId: Int? = null
+    val userId: UUID? = null
 )
 
 data class UpdateDocumentVersionRequest(

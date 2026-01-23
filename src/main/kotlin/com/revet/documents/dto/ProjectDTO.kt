@@ -12,7 +12,7 @@ data class ProjectDTO(
     val name: String,
     val description: String?,
     val organizationId: Long,
-    val clientIds: Set<Long>,
+    val clientIds: Set<UUID>,
     val tags: Set<String>,
     val isActive: Boolean,
     val createdAt: LocalDateTime,
@@ -23,24 +23,24 @@ data class CreateProjectRequest(
     val name: String,
     val organizationId: Long,
     val description: String? = null,
-    val clientIds: Set<Long> = emptySet(),
+    val clientIds: Set<UUID> = emptySet(),
     val tags: Set<String> = emptySet()
 )
 
 data class UpdateProjectRequest(
     val name: String? = null,
     val description: String? = null,
-    val clientIds: Set<Long>? = null,
+    val clientIds: Set<UUID>? = null,
     val tags: Set<String>? = null,
     val isActive: Boolean? = null
 )
 
 data class AddClientRequest(
-    val clientId: Long
+    val clientId: UUID
 )
 
 data class RemoveClientRequest(
-    val clientId: Long
+    val clientId: UUID
 )
 
 data class AddTagRequest(

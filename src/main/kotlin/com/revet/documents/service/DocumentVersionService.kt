@@ -25,7 +25,7 @@ interface DocumentVersionService {
         file: String? = null,
         description: String? = null,
         mime: String? = null,
-        userId: Int? = null
+        userId: UUID? = null
     ): com.revet.documents.domain.DocumentVersion
     fun updateVersion(
         uuid: UUID,
@@ -78,7 +78,7 @@ class DocumentVersionServiceImpl @Inject constructor(
         file: String?,
         description: String?,
         mime: String?,
-        userId: Int?
+        userId: UUID?
     ): com.revet.documents.domain.DocumentVersion {
         require(name.isNotBlank()) { "Version name cannot be blank" }
 

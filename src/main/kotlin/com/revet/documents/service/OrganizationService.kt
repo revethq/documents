@@ -1,7 +1,13 @@
 package com.revet.documents.service
 
 import com.revet.documents.domain.Organization
+import com.revet.documents.permission.DocumentsUrn
+import com.revet.documents.permission.PrebuiltPolicies
 import com.revet.documents.repository.OrganizationRepository
+import com.revet.documents.security.CurrentUserService
+import com.revethq.iam.permission.persistence.service.PolicyAttachmentService
+import com.revethq.iam.permission.persistence.service.PolicyService
+import com.revethq.iam.permission.web.filter.AuthorizationContext
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import java.util.*
@@ -10,37 +16,37 @@ import java.util.*
  * Service interface for Organization business logic.
  */
 interface OrganizationService {
-    fun getAllOrganizations(includeInactive: Boolean = false): List<com.revet.documents.domain.Organization>
-    fun getOrganizationById(id: Long): com.revet.documents.domain.Organization?
-    fun getOrganizationByUuid(uuid: UUID): com.revet.documents.domain.Organization?
+    fun getAllOrganizations(includeInactive: Boolean = false): List<Organization>
+    fun getOrganizationById(id: Long): Organization?
+    fun getOrganizationByUuid(uuid: UUID): Organization?
     fun createOrganization(
         name: String,
         description: String? = null,
-        contactInfo: com.revet.documents.domain.Organization.ContactInfo = _root_ide_package_.com.revet.documents.domain.Organization.ContactInfo(null, null, null, null, null, null, null, null),
+        contactInfo: Organization.ContactInfo = Organization.ContactInfo(null, null, null, null, null, null, null, null),
         locale: String? = "en",
         timezone: String = "UTC",
         bucketId: Long? = null
-    ): com.revet.documents.domain.Organization
+    ): Organization
     fun updateOrganization(
         id: Long,
         name: String? = null,
         description: String? = null,
-        contactInfo: com.revet.documents.domain.Organization.ContactInfo? = null,
+        contactInfo: Organization.ContactInfo? = null,
         locale: String? = null,
         timezone: String? = null,
         bucketId: Long? = null,
         isActive: Boolean? = null
-    ): com.revet.documents.domain.Organization?
+    ): Organization?
     fun updateOrganizationByUuid(
         uuid: UUID,
         name: String? = null,
         description: String? = null,
-        contactInfo: com.revet.documents.domain.Organization.ContactInfo? = null,
+        contactInfo: Organization.ContactInfo? = null,
         locale: String? = null,
         timezone: String? = null,
         bucketId: Long? = null,
         isActive: Boolean? = null
-    ): com.revet.documents.domain.Organization?
+    ): Organization?
     fun deleteOrganization(id: Long): Boolean
     fun deleteOrganizationByUuid(uuid: UUID): Boolean
 }
@@ -50,32 +56,38 @@ interface OrganizationService {
  */
 @ApplicationScoped
 class OrganizationServiceImpl @Inject constructor(
-    private val organizationRepository: com.revet.documents.repository.OrganizationRepository
-) : com.revet.documents.service.OrganizationService {
+    private val organizationRepository: OrganizationRepository,
+    private val policyService: PolicyService,
+    private val policyAttachmentService: PolicyAttachmentService,
+    private val prebuiltPolicies: PrebuiltPolicies,
+    private val urn: DocumentsUrn,
+    private val authorizationContext: AuthorizationContext,
+    private val currentUserService: CurrentUserService
+) : OrganizationService {
 
-    override fun getAllOrganizations(includeInactive: Boolean): List<com.revet.documents.domain.Organization> {
+    override fun getAllOrganizations(includeInactive: Boolean): List<Organization> {
         return organizationRepository.findAll(includeInactive)
     }
 
-    override fun getOrganizationById(id: Long): com.revet.documents.domain.Organization? {
+    override fun getOrganizationById(id: Long): Organization? {
         return organizationRepository.findById(id)
     }
 
-    override fun getOrganizationByUuid(uuid: UUID): com.revet.documents.domain.Organization? {
+    override fun getOrganizationByUuid(uuid: UUID): Organization? {
         return organizationRepository.findByUuid(uuid)
     }
 
     override fun createOrganization(
         name: String,
         description: String?,
-        contactInfo: com.revet.documents.domain.Organization.ContactInfo,
+        contactInfo: Organization.ContactInfo,
         locale: String?,
         timezone: String,
         bucketId: Long?
-    ): com.revet.documents.domain.Organization {
+    ): Organization {
         require(name.isNotBlank()) { "Organization name cannot be blank" }
 
-        val organization = _root_ide_package_.com.revet.documents.domain.Organization.create(
+        val organization = Organization.create(
             name = name,
             description = description,
             contactInfo = contactInfo,
@@ -84,19 +96,46 @@ class OrganizationServiceImpl @Inject constructor(
             bucketId = bucketId
         )
 
-        return organizationRepository.save(organization)
+        val savedOrganization = organizationRepository.save(organization)
+
+        // Create default policies for the organization
+        createDefaultPolicies(savedOrganization)
+
+        return savedOrganization
+    }
+
+    private fun createDefaultPolicies(organization: Organization) {
+        val tenantId = authorizationContext.tenantId ?: return
+        val currentUserUuid = currentUserService.getCurrentUserUuid() ?: return
+
+        // Create admin policy and attach to creating user
+        val adminPolicy = prebuiltPolicies.organizationAdminPolicy(tenantId, organization.uuid)
+        val savedAdminPolicy = policyService.create(adminPolicy)
+        policyAttachmentService.attach(
+            savedAdminPolicy.id,
+            urn.userPrincipal(tenantId, currentUserUuid),
+            tenantId
+        )
+
+        // Create manager policy (unattached for later assignment)
+        val managerPolicy = prebuiltPolicies.organizationManagerPolicyForResource(tenantId, organization.uuid)
+        policyService.create(managerPolicy)
+
+        // Create viewer policy (unattached for later assignment)
+        val viewerPolicy = prebuiltPolicies.organizationViewerPolicyForResource(tenantId, organization.uuid)
+        policyService.create(viewerPolicy)
     }
 
     override fun updateOrganization(
         id: Long,
         name: String?,
         description: String?,
-        contactInfo: com.revet.documents.domain.Organization.ContactInfo?,
+        contactInfo: Organization.ContactInfo?,
         locale: String?,
         timezone: String?,
         bucketId: Long?,
         isActive: Boolean?
-    ): com.revet.documents.domain.Organization? {
+    ): Organization? {
         val existing = organizationRepository.findById(id) ?: return null
 
         name?.let { require(it.isNotBlank()) { "Organization name cannot be blank" } }
@@ -122,12 +161,12 @@ class OrganizationServiceImpl @Inject constructor(
         uuid: UUID,
         name: String?,
         description: String?,
-        contactInfo: com.revet.documents.domain.Organization.ContactInfo?,
+        contactInfo: Organization.ContactInfo?,
         locale: String?,
         timezone: String?,
         bucketId: Long?,
         isActive: Boolean?
-    ): com.revet.documents.domain.Organization? {
+    ): Organization? {
         val organization = organizationRepository.findByUuid(uuid) ?: return null
         return updateOrganization(organization.id!!, name, description, contactInfo, locale, timezone, bucketId, isActive)
     }

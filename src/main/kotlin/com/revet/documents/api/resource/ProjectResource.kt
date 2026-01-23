@@ -1,10 +1,9 @@
 package com.revet.documents.api.resource
 
 import com.revet.documents.api.mapper.ProjectDTOMapper
-import com.revet.documents.domain.PermissionType
 import com.revet.documents.dto.*
-import com.revet.documents.security.ResourceType
-import com.revet.documents.security.SecuredBy
+import com.revet.documents.permission.Actions
+import com.revethq.iam.permission.web.filter.RequiresPermission
 import com.revet.documents.service.ProjectService
 import jakarta.inject.Inject
 import jakarta.ws.rs.*
@@ -57,7 +56,7 @@ class ProjectResource @Inject constructor(
 
     @GET
     @Path("/{uuid}")
-    @SecuredBy(resource = ResourceType.PROJECT, permission = PermissionType.CAN_INVITE)
+    @RequiresPermission(action = Actions.Project.GET, resource = "urn:revet:documents:{tenantId}:project/{uuid}")
     @Operation(summary = "Get project by UUID", description = "Retrieve a single project by its UUID")
     @APIResponses(
         APIResponse(
@@ -113,7 +112,7 @@ class ProjectResource @Inject constructor(
 
     @PUT
     @Path("/{uuid}")
-    @SecuredBy(resource = ResourceType.PROJECT, permission = PermissionType.CAN_CREATE)
+    @RequiresPermission(action = Actions.Project.UPDATE, resource = "urn:revet:documents:{tenantId}:project/{uuid}")
     @Operation(summary = "Update project", description = "Update an existing project")
     @APIResponses(
         APIResponse(
@@ -153,7 +152,7 @@ class ProjectResource @Inject constructor(
 
     @POST
     @Path("/{uuid}/clients")
-    @SecuredBy(resource = ResourceType.PROJECT, permission = PermissionType.CAN_MANAGE)
+    @RequiresPermission(action = Actions.Project.ADD_CLIENT, resource = "urn:revet:documents:{tenantId}:project/{uuid}")
     @Operation(summary = "Add client to project", description = "Add a client user to the project")
     @APIResponses(
         APIResponse(
@@ -180,7 +179,7 @@ class ProjectResource @Inject constructor(
 
     @DELETE
     @Path("/{uuid}/clients/{clientId}")
-    @SecuredBy(resource = ResourceType.PROJECT, permission = PermissionType.CAN_MANAGE)
+    @RequiresPermission(action = Actions.Project.REMOVE_CLIENT, resource = "urn:revet:documents:{tenantId}:project/{uuid}")
     @Operation(summary = "Remove client from project", description = "Remove a client user from the project")
     @APIResponses(
         APIResponse(
@@ -197,7 +196,7 @@ class ProjectResource @Inject constructor(
         uuid: UUID,
         @PathParam("clientId")
         @Parameter(description = "Client ID")
-        clientId: Long
+        clientId: UUID
     ): Response {
         val project = projectService.removeClientFromProjectByUuid(uuid, clientId)
             ?: return Response.status(Response.Status.NOT_FOUND)
@@ -209,7 +208,7 @@ class ProjectResource @Inject constructor(
 
     @POST
     @Path("/{uuid}/tags")
-    @SecuredBy(resource = ResourceType.PROJECT, permission = PermissionType.CAN_CREATE)
+    @RequiresPermission(action = Actions.Project.ADD_TAG, resource = "urn:revet:documents:{tenantId}:project/{uuid}")
     @Operation(summary = "Add tag to project", description = "Add a tag to the project")
     @APIResponses(
         APIResponse(
@@ -242,7 +241,7 @@ class ProjectResource @Inject constructor(
 
     @DELETE
     @Path("/{uuid}/tags/{tag}")
-    @SecuredBy(resource = ResourceType.PROJECT, permission = PermissionType.CAN_CREATE)
+    @RequiresPermission(action = Actions.Project.REMOVE_TAG, resource = "urn:revet:documents:{tenantId}:project/{uuid}")
     @Operation(summary = "Remove tag from project", description = "Remove a tag from the project")
     @APIResponses(
         APIResponse(
@@ -271,7 +270,7 @@ class ProjectResource @Inject constructor(
 
     @DELETE
     @Path("/{uuid}")
-    @SecuredBy(resource = ResourceType.PROJECT, permission = PermissionType.CAN_MANAGE)
+    @RequiresPermission(action = Actions.Project.DELETE, resource = "urn:revet:documents:{tenantId}:project/{uuid}")
     @Operation(summary = "Delete project", description = "Soft delete a project")
     @APIResponses(
         APIResponse(responseCode = "204", description = "Project deleted"),

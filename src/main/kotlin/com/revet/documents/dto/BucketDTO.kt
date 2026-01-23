@@ -1,7 +1,7 @@
 package com.revet.documents.dto
 
 import com.revet.documents.domain.StorageProvider
-import java.util.*
+import java.util.UUID
 
 /**
  * Data Transfer Object for Bucket.
@@ -11,7 +11,7 @@ data class BucketDTO(
     val id: Long?,
     val uuid: UUID,
     val name: String,
-    val provider: com.revet.documents.domain.StorageProvider,
+    val provider: StorageProvider,
     val bucketName: String,
     val endpoint: String?,
     val region: String?,
@@ -21,7 +21,7 @@ data class BucketDTO(
 
 data class CreateBucketRequest(
     val name: String,
-    val provider: com.revet.documents.domain.StorageProvider,
+    val provider: StorageProvider,
     val bucketName: String,
     val accessKey: String,
     val secretKey: String,

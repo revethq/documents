@@ -3,11 +3,10 @@ package com.revet.documents.api.resource
 import com.revet.documents.api.mapper.DocumentDTOMapper
 import com.revet.documents.api.mapper.PageDTOMapper
 import com.revet.documents.domain.PageRequest
-import com.revet.documents.domain.PermissionType
 import com.revet.documents.domain.Sort
 import com.revet.documents.dto.*
-import com.revet.documents.security.ResourceType
-import com.revet.documents.security.SecuredBy
+import com.revet.documents.permission.Actions
+import com.revethq.iam.permission.web.filter.RequiresPermission
 import com.revet.documents.service.CategoryService
 import com.revet.documents.service.DocumentService
 import com.revet.documents.service.DocumentVersionService
@@ -202,7 +201,7 @@ class DocumentResource @Inject constructor(
 
     @GET
     @Path("/{uuid}")
-    @SecuredBy(resource = ResourceType.DOCUMENT, permission = PermissionType.CAN_INVITE)
+    @RequiresPermission(action = Actions.Document.GET, resource = "urn:revet:documents:{tenantId}:document/{uuid}")
     @Operation(summary = "Get document by UUID", description = "Retrieve a single document by its UUID")
     @APIResponses(
         APIResponse(
@@ -228,7 +227,7 @@ class DocumentResource @Inject constructor(
 
     @GET
     @Path("/{uuid}/download")
-    @SecuredBy(resource = ResourceType.DOCUMENT, permission = PermissionType.CAN_INVITE)
+    @RequiresPermission(action = Actions.Document.DOWNLOAD, resource = "urn:revet:documents:{tenantId}:document/{uuid}")
     @Operation(summary = "Get download URL for latest document version", description = "Generate a presigned download URL for the latest version of a document")
     @APIResponses(
         APIResponse(
@@ -323,7 +322,7 @@ class DocumentResource @Inject constructor(
 
     @PUT
     @Path("/{uuid}")
-    @SecuredBy(resource = ResourceType.DOCUMENT, permission = PermissionType.CAN_CREATE)
+    @RequiresPermission(action = Actions.Document.UPDATE, resource = "urn:revet:documents:{tenantId}:document/{uuid}")
     @Operation(summary = "Update document", description = "Update an existing document")
     @APIResponses(
         APIResponse(
@@ -363,7 +362,7 @@ class DocumentResource @Inject constructor(
 
     @POST
     @Path("/{uuid}/tags")
-    @SecuredBy(resource = ResourceType.DOCUMENT, permission = PermissionType.CAN_CREATE)
+    @RequiresPermission(action = Actions.Document.ADD_TAG, resource = "urn:revet:documents:{tenantId}:document/{uuid}")
     @Operation(summary = "Add tag to document", description = "Add a tag to the document")
     @APIResponses(
         APIResponse(
@@ -396,7 +395,7 @@ class DocumentResource @Inject constructor(
 
     @DELETE
     @Path("/{uuid}/tags/{tag}")
-    @SecuredBy(resource = ResourceType.DOCUMENT, permission = PermissionType.CAN_CREATE)
+    @RequiresPermission(action = Actions.Document.REMOVE_TAG, resource = "urn:revet:documents:{tenantId}:document/{uuid}")
     @Operation(summary = "Remove tag from document", description = "Remove a tag from the document")
     @APIResponses(
         APIResponse(
@@ -425,7 +424,7 @@ class DocumentResource @Inject constructor(
 
     @DELETE
     @Path("/{uuid}")
-    @SecuredBy(resource = ResourceType.DOCUMENT, permission = PermissionType.CAN_MANAGE)
+    @RequiresPermission(action = Actions.Document.DELETE, resource = "urn:revet:documents:{tenantId}:document/{uuid}")
     @Operation(summary = "Delete document", description = "Soft delete a document")
     @APIResponses(
         APIResponse(responseCode = "204", description = "Document deleted"),

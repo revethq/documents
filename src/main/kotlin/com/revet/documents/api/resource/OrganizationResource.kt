@@ -1,12 +1,11 @@
 package com.revet.documents.api.resource
 
 import com.revet.documents.api.mapper.OrganizationDTOMapper
-import com.revet.documents.domain.PermissionType
 import com.revet.documents.dto.CreateOrganizationRequest
 import com.revet.documents.dto.OrganizationDTO
 import com.revet.documents.dto.UpdateOrganizationRequest
-import com.revet.documents.security.ResourceType
-import com.revet.documents.security.SecuredBy
+import com.revet.documents.permission.Actions
+import com.revethq.iam.permission.web.filter.RequiresPermission
 import com.revet.documents.service.OrganizationService
 import jakarta.inject.Inject
 import jakarta.ws.rs.*
@@ -53,7 +52,7 @@ class OrganizationResource @Inject constructor(
 
     @GET
     @Path("/{uuid}")
-    @SecuredBy(resource = ResourceType.ORGANIZATION, permission = PermissionType.CAN_INVITE)
+    @RequiresPermission(action = Actions.Organization.GET, resource = "urn:revet:documents:{tenantId}:organization/{uuid}")
     @Operation(summary = "Get organization by UUID", description = "Retrieve a single organization by its UUID")
     @APIResponses(
         APIResponse(
@@ -111,7 +110,7 @@ class OrganizationResource @Inject constructor(
 
     @PUT
     @Path("/{uuid}")
-    @SecuredBy(resource = ResourceType.ORGANIZATION, permission = PermissionType.CAN_CREATE)
+    @RequiresPermission(action = Actions.Organization.UPDATE, resource = "urn:revet:documents:{tenantId}:organization/{uuid}")
     @Operation(summary = "Update organization", description = "Update an existing organization")
     @APIResponses(
         APIResponse(
@@ -154,7 +153,7 @@ class OrganizationResource @Inject constructor(
 
     @DELETE
     @Path("/{uuid}")
-    @SecuredBy(resource = ResourceType.ORGANIZATION, permission = PermissionType.CAN_MANAGE)
+    @RequiresPermission(action = Actions.Organization.DELETE, resource = "urn:revet:documents:{tenantId}:organization/{uuid}")
     @Operation(summary = "Delete organization", description = "Soft delete an organization")
     @APIResponses(
         APIResponse(responseCode = "204", description = "Organization deleted"),
