@@ -47,13 +47,13 @@ dependencies {
 
     // Revet IAM
     implementation("com.revethq:revet-core:0.1.0")
-    implementation("com.revethq.iam:revet-user:0.1.12")
-    implementation("com.revethq.iam:revet-user-persistence-runtime:0.1.12")
-    implementation("com.revethq.iam:revet-permission:0.1.12")
-    implementation("com.revethq.iam:revet-user-web:0.1.12")
-    implementation("com.revethq.iam:revet-permission-persistence-runtime:0.1.12")
-    implementation("com.revethq.iam:revet-permission-web:0.1.12")
-    implementation("com.revethq.iam:revet-scim:0.1.12")
+    implementation("com.revethq.iam:revet-user:0.1.13")
+    implementation("com.revethq.iam:revet-user-persistence-runtime:0.1.13")
+    implementation("com.revethq.iam:revet-permission:0.1.13")
+    implementation("com.revethq.iam:revet-user-web:0.1.13")
+    implementation("com.revethq.iam:revet-permission-persistence-runtime:0.1.13")
+    implementation("com.revethq.iam:revet-permission-web:0.1.13")
+    implementation("com.revethq.iam:revet-scim:0.1.13")
 
     // Testing
     testImplementation("io.quarkus:quarkus-junit5")

@@ -33,13 +33,15 @@ class OrganizationResource @Inject constructor(
 ) {
 
     @GET
+    @RequiresPermission(action = Actions.Organization.LIST, resource = "urn:revet:documents:{tenantId}:organization/*")
     @Operation(summary = "List all organizations", description = "Retrieve a list of all active organizations")
     @APIResponses(
         APIResponse(
             responseCode = "200",
             description = "List of organizations",
             content = [Content(mediaType = MediaType.APPLICATION_JSON, schema = Schema(implementation = _root_ide_package_.com.revet.documents.dto.OrganizationDTO::class))]
-        )
+        ),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
     fun listOrganizations(
         @QueryParam("includeInactive")
@@ -77,6 +79,7 @@ class OrganizationResource @Inject constructor(
     }
 
     @POST
+    @RequiresPermission(action = Actions.Organization.CREATE, resource = "urn:revet:documents:{tenantId}:organization/*")
     @Operation(summary = "Create organization", description = "Create a new organization")
     @APIResponses(
         APIResponse(
@@ -84,7 +87,8 @@ class OrganizationResource @Inject constructor(
             description = "Organization created",
             content = [Content(mediaType = MediaType.APPLICATION_JSON, schema = Schema(implementation = _root_ide_package_.com.revet.documents.dto.OrganizationDTO::class))]
         ),
-        APIResponse(responseCode = "400", description = "Invalid request")
+        APIResponse(responseCode = "400", description = "Invalid request"),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
     fun createOrganization(request: com.revet.documents.dto.CreateOrganizationRequest): Response {
         return try {

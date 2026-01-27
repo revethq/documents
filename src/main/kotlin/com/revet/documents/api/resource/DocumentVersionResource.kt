@@ -42,13 +42,15 @@ class DocumentVersionResource @Inject constructor(
 ) {
 
     @GET
+    @RequiresPermission(action = Actions.DocumentVersion.LIST, resource = "urn:revet:documents:{tenantId}:document-version/*")
     @Operation(summary = "List all document versions", description = "Retrieve a list of all document versions")
     @APIResponses(
         APIResponse(
             responseCode = "200",
             description = "List of document versions",
             content = [Content(mediaType = MediaType.APPLICATION_JSON, schema = Schema(implementation = _root_ide_package_.com.revet.documents.dto.DocumentVersionDTO::class))]
-        )
+        ),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
     fun listVersions(
         @QueryParam("documentId")
@@ -145,6 +147,7 @@ class DocumentVersionResource @Inject constructor(
     }
 
     @POST
+    @RequiresPermission(action = Actions.DocumentVersion.CREATE, resource = "urn:revet:documents:{tenantId}:document-version/*")
     @Operation(summary = "Create version", description = "Create a new document version")
     @APIResponses(
         APIResponse(
@@ -152,7 +155,8 @@ class DocumentVersionResource @Inject constructor(
             description = "Version created",
             content = [Content(mediaType = MediaType.APPLICATION_JSON, schema = Schema(implementation = _root_ide_package_.com.revet.documents.dto.DocumentVersionDTO::class))]
         ),
-        APIResponse(responseCode = "400", description = "Invalid request")
+        APIResponse(responseCode = "400", description = "Invalid request"),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
     fun createVersion(request: com.revet.documents.dto.CreateDocumentVersionRequest): Response {
         return try {

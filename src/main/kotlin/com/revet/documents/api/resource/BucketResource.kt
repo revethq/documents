@@ -1,5 +1,7 @@
 package com.revet.documents.api.resource
 
+import com.revet.documents.permission.Actions
+import com.revethq.iam.permission.web.filter.RequiresPermission
 import jakarta.inject.Inject
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.DELETE
@@ -34,13 +36,15 @@ class BucketResource @Inject constructor(
 ) {
 
     @GET
+    @RequiresPermission(action = Actions.Bucket.LIST, resource = "urn:revet:documents:{tenantId}:bucket/*")
     @Operation(summary = "List all buckets", description = "Retrieve a list of all active bucket configurations")
     @APIResponses(
         APIResponse(
             responseCode = "200",
             description = "List of buckets",
             content = [Content(mediaType = MediaType.APPLICATION_JSON, schema = Schema(implementation = _root_ide_package_.com.revet.documents.dto.BucketDTO::class))]
-        )
+        ),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
     fun listBuckets(
         @QueryParam("includeInactive")
@@ -53,6 +57,7 @@ class BucketResource @Inject constructor(
 
     @GET
     @Path("/{uuid}")
+    @RequiresPermission(action = Actions.Bucket.GET, resource = "urn:revet:documents:{tenantId}:bucket/{uuid}")
     @Operation(summary = "Get bucket by UUID", description = "Retrieve a single bucket configuration by its UUID")
     @APIResponses(
         APIResponse(
@@ -60,7 +65,8 @@ class BucketResource @Inject constructor(
             description = "Bucket found",
             content = [Content(mediaType = MediaType.APPLICATION_JSON, schema = Schema(implementation = _root_ide_package_.com.revet.documents.dto.BucketDTO::class))]
         ),
-        APIResponse(responseCode = "404", description = "Bucket not found")
+        APIResponse(responseCode = "404", description = "Bucket not found"),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
     fun getBucket(
         @PathParam("uuid")
@@ -76,6 +82,7 @@ class BucketResource @Inject constructor(
     }
 
     @POST
+    @RequiresPermission(action = Actions.Bucket.CREATE, resource = "urn:revet:documents:{tenantId}:bucket/*")
     @Operation(summary = "Create bucket", description = "Create a new bucket configuration")
     @APIResponses(
         APIResponse(
@@ -83,7 +90,8 @@ class BucketResource @Inject constructor(
             description = "Bucket created",
             content = [Content(mediaType = MediaType.APPLICATION_JSON, schema = Schema(implementation = _root_ide_package_.com.revet.documents.dto.BucketDTO::class))]
         ),
-        APIResponse(responseCode = "400", description = "Invalid request")
+        APIResponse(responseCode = "400", description = "Invalid request"),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
     fun createBucket(request: com.revet.documents.dto.CreateBucketRequest): Response {
         return try {
@@ -110,6 +118,7 @@ class BucketResource @Inject constructor(
 
     @PUT
     @Path("/{uuid}")
+    @RequiresPermission(action = Actions.Bucket.UPDATE, resource = "urn:revet:documents:{tenantId}:bucket/{uuid}")
     @Operation(summary = "Update bucket", description = "Update an existing bucket configuration")
     @APIResponses(
         APIResponse(
@@ -118,7 +127,8 @@ class BucketResource @Inject constructor(
             content = [Content(mediaType = MediaType.APPLICATION_JSON, schema = Schema(implementation = _root_ide_package_.com.revet.documents.dto.BucketDTO::class))]
         ),
         APIResponse(responseCode = "404", description = "Bucket not found"),
-        APIResponse(responseCode = "400", description = "Invalid request")
+        APIResponse(responseCode = "400", description = "Invalid request"),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
     fun updateBucket(
         @PathParam("uuid")
@@ -151,10 +161,12 @@ class BucketResource @Inject constructor(
 
     @DELETE
     @Path("/{uuid}")
+    @RequiresPermission(action = Actions.Bucket.DELETE, resource = "urn:revet:documents:{tenantId}:bucket/{uuid}")
     @Operation(summary = "Delete bucket", description = "Soft delete a bucket configuration")
     @APIResponses(
         APIResponse(responseCode = "204", description = "Bucket deleted"),
-        APIResponse(responseCode = "404", description = "Bucket not found")
+        APIResponse(responseCode = "404", description = "Bucket not found"),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
     fun deleteBucket(
         @PathParam("uuid")

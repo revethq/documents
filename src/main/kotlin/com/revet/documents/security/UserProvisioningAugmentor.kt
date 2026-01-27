@@ -49,9 +49,9 @@ class UserProvisioningAugmentor : SecurityIdentityAugmentor {
         // Extract claims directly from the JWT principal
         val username = principal.getClaim<String>("preferred_username") ?: principal.getClaim<String>("name")
         val email = principal.getClaim<String>("email")
-        val tenantId = principal.getClaim<String>("tenant_id") ?: DEFAULT_TENANT_ID
-        val subject = principal.subject ?: principalName
         val issuer = principal.issuer
+        val tenantId = principal.getClaim<String>("tenant_id") ?: issuer ?: DEFAULT_TENANT_ID
+        val subject = principal.subject ?: principalName
 
         // Run provisioning on blocking thread via the context
         return context.runBlocking {

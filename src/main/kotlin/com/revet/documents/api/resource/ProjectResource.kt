@@ -30,13 +30,15 @@ class ProjectResource @Inject constructor(
 ) {
 
     @GET
+    @RequiresPermission(action = Actions.Project.LIST, resource = "urn:revet:documents:{tenantId}:project/*")
     @Operation(summary = "List all projects", description = "Retrieve a list of all active projects")
     @APIResponses(
         APIResponse(
             responseCode = "200",
             description = "List of projects",
             content = [Content(mediaType = MediaType.APPLICATION_JSON, schema = Schema(implementation = _root_ide_package_.com.revet.documents.dto.ProjectDTO::class))]
-        )
+        ),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
     fun listProjects(
         @QueryParam("includeInactive")
@@ -81,6 +83,7 @@ class ProjectResource @Inject constructor(
     }
 
     @POST
+    @RequiresPermission(action = Actions.Project.CREATE, resource = "urn:revet:documents:{tenantId}:project/*")
     @Operation(summary = "Create project", description = "Create a new project")
     @APIResponses(
         APIResponse(
@@ -88,7 +91,8 @@ class ProjectResource @Inject constructor(
             description = "Project created",
             content = [Content(mediaType = MediaType.APPLICATION_JSON, schema = Schema(implementation = _root_ide_package_.com.revet.documents.dto.ProjectDTO::class))]
         ),
-        APIResponse(responseCode = "400", description = "Invalid request")
+        APIResponse(responseCode = "400", description = "Invalid request"),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
     fun createProject(request: com.revet.documents.dto.CreateProjectRequest): Response {
         return try {

@@ -2,6 +2,8 @@ package com.revet.documents.api.resource
 
 import com.revet.documents.api.mapper.TagDTOMapper
 import com.revet.documents.dto.*
+import com.revet.documents.permission.Actions
+import com.revethq.iam.permission.web.filter.RequiresPermission
 import com.revet.documents.service.TagService
 import jakarta.inject.Inject
 import jakarta.ws.rs.*
@@ -27,13 +29,15 @@ class TagResource @Inject constructor(
 ) {
 
     @GET
+    @RequiresPermission(action = Actions.Tag.LIST, resource = "urn:revet:documents:{tenantId}:tag/*")
     @Operation(summary = "List all tags", description = "Retrieve a list of all tags")
     @APIResponses(
         APIResponse(
             responseCode = "200",
             description = "List of tags",
             content = [Content(mediaType = MediaType.APPLICATION_JSON, schema = Schema(implementation = _root_ide_package_.com.revet.documents.dto.TagDTO::class))]
-        )
+        ),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
     fun listTags(): List<com.revet.documents.dto.TagDTO> {
         return tagService.getAllTags().map { _root_ide_package_.com.revet.documents.api.mapper.TagDTOMapper.toDTO(it) }
@@ -41,6 +45,7 @@ class TagResource @Inject constructor(
 
     @GET
     @Path("/{id}")
+    @RequiresPermission(action = Actions.Tag.GET, resource = "urn:revet:documents:{tenantId}:tag/{id}")
     @Operation(summary = "Get tag by ID", description = "Retrieve a single tag by its ID")
     @APIResponses(
         APIResponse(
@@ -48,7 +53,8 @@ class TagResource @Inject constructor(
             description = "Tag found",
             content = [Content(mediaType = MediaType.APPLICATION_JSON, schema = Schema(implementation = _root_ide_package_.com.revet.documents.dto.TagDTO::class))]
         ),
-        APIResponse(responseCode = "404", description = "Tag not found")
+        APIResponse(responseCode = "404", description = "Tag not found"),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
     fun getTag(
         @PathParam("id")
@@ -73,6 +79,7 @@ class TagResource @Inject constructor(
 
     @GET
     @Path("/slug/{slug}")
+    @RequiresPermission(action = Actions.Tag.GET, resource = "urn:revet:documents:{tenantId}:tag/*")
     @Operation(summary = "Get tag by slug", description = "Retrieve a single tag by its slug")
     @APIResponses(
         APIResponse(
@@ -80,7 +87,8 @@ class TagResource @Inject constructor(
             description = "Tag found",
             content = [Content(mediaType = MediaType.APPLICATION_JSON, schema = Schema(implementation = _root_ide_package_.com.revet.documents.dto.TagDTO::class))]
         ),
-        APIResponse(responseCode = "404", description = "Tag not found")
+        APIResponse(responseCode = "404", description = "Tag not found"),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
     fun getTagBySlug(
         @PathParam("slug")
@@ -104,6 +112,7 @@ class TagResource @Inject constructor(
     }
 
     @POST
+    @RequiresPermission(action = Actions.Tag.CREATE, resource = "urn:revet:documents:{tenantId}:tag/*")
     @Operation(summary = "Create tag", description = "Create a new tag")
     @APIResponses(
         APIResponse(
@@ -112,7 +121,8 @@ class TagResource @Inject constructor(
             content = [Content(mediaType = MediaType.APPLICATION_JSON, schema = Schema(implementation = _root_ide_package_.com.revet.documents.dto.TagDTO::class))]
         ),
         APIResponse(responseCode = "400", description = "Invalid request"),
-        APIResponse(responseCode = "409", description = "Tag already exists")
+        APIResponse(responseCode = "409", description = "Tag already exists"),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
     fun createTag(request: com.revet.documents.dto.CreateTagRequest): Response {
         return try {
@@ -146,6 +156,7 @@ class TagResource @Inject constructor(
 
     @PUT
     @Path("/{id}")
+    @RequiresPermission(action = Actions.Tag.UPDATE, resource = "urn:revet:documents:{tenantId}:tag/{id}")
     @Operation(summary = "Update tag", description = "Update an existing tag")
     @APIResponses(
         APIResponse(
@@ -155,7 +166,8 @@ class TagResource @Inject constructor(
         ),
         APIResponse(responseCode = "404", description = "Tag not found"),
         APIResponse(responseCode = "400", description = "Invalid request"),
-        APIResponse(responseCode = "409", description = "Tag name/slug already exists")
+        APIResponse(responseCode = "409", description = "Tag name/slug already exists"),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
     fun updateTag(
         @PathParam("id")
@@ -203,10 +215,12 @@ class TagResource @Inject constructor(
 
     @DELETE
     @Path("/{id}")
+    @RequiresPermission(action = Actions.Tag.DELETE, resource = "urn:revet:documents:{tenantId}:tag/{id}")
     @Operation(summary = "Delete tag", description = "Delete a tag")
     @APIResponses(
         APIResponse(responseCode = "204", description = "Tag deleted"),
-        APIResponse(responseCode = "404", description = "Tag not found")
+        APIResponse(responseCode = "404", description = "Tag not found"),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
     fun deleteTag(
         @PathParam("id")

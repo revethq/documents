@@ -54,6 +54,7 @@ class DocumentResource @Inject constructor(
     }
 
     @GET
+    @RequiresPermission(action = Actions.Document.LIST, resource = "urn:revet:documents:{tenantId}:document/*")
     @Operation(summary = "List documents with pagination", description = "Retrieve a paginated list of documents with optional filtering and sorting")
     @APIResponses(
         APIResponse(
@@ -61,7 +62,8 @@ class DocumentResource @Inject constructor(
             description = "Paginated list of documents",
             content = [Content(mediaType = MediaType.APPLICATION_JSON, schema = Schema(implementation = _root_ide_package_.com.revet.documents.dto.PageDTO::class))]
         ),
-        APIResponse(responseCode = "400", description = "Invalid pagination parameters")
+        APIResponse(responseCode = "400", description = "Invalid pagination parameters"),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
     fun listDocuments(
         @QueryParam("page")
@@ -291,6 +293,7 @@ class DocumentResource @Inject constructor(
     }
 
     @POST
+    @RequiresPermission(action = Actions.Document.CREATE, resource = "urn:revet:documents:{tenantId}:document/*")
     @Operation(summary = "Create document", description = "Create a new document")
     @APIResponses(
         APIResponse(
@@ -298,7 +301,8 @@ class DocumentResource @Inject constructor(
             description = "Document created",
             content = [Content(mediaType = MediaType.APPLICATION_JSON, schema = Schema(implementation = _root_ide_package_.com.revet.documents.dto.DocumentDTO::class))]
         ),
-        APIResponse(responseCode = "400", description = "Invalid request")
+        APIResponse(responseCode = "400", description = "Invalid request"),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
     fun createDocument(request: com.revet.documents.dto.CreateDocumentRequest): Response {
         return try {

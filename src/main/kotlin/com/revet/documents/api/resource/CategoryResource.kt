@@ -4,6 +4,8 @@ import com.revet.documents.api.mapper.CategoryDTOMapper
 import com.revet.documents.dto.CategoryDTO
 import com.revet.documents.dto.CreateCategoryRequest
 import com.revet.documents.dto.UpdateCategoryRequest
+import com.revet.documents.permission.Actions
+import com.revethq.iam.permission.web.filter.RequiresPermission
 import com.revet.documents.service.CategoryService
 import jakarta.inject.Inject
 import jakarta.ws.rs.*
@@ -29,13 +31,15 @@ class CategoryResource @Inject constructor(
 ) {
 
     @GET
+    @RequiresPermission(action = Actions.Category.LIST, resource = "urn:revet:documents:{tenantId}:category/*")
     @Operation(summary = "List all categories", description = "Retrieve a list of all categories")
     @APIResponses(
         APIResponse(
             responseCode = "200",
             description = "List of categories",
             content = [Content(mediaType = MediaType.APPLICATION_JSON, schema = Schema(implementation = _root_ide_package_.com.revet.documents.dto.CategoryDTO::class))]
-        )
+        ),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
     fun listCategories(
         @QueryParam("projectId")
@@ -52,6 +56,7 @@ class CategoryResource @Inject constructor(
 
     @GET
     @Path("/{id}")
+    @RequiresPermission(action = Actions.Category.GET, resource = "urn:revet:documents:{tenantId}:category/{id}")
     @Operation(summary = "Get category by ID", description = "Retrieve a single category by its ID")
     @APIResponses(
         APIResponse(
@@ -59,7 +64,8 @@ class CategoryResource @Inject constructor(
             description = "Category found",
             content = [Content(mediaType = MediaType.APPLICATION_JSON, schema = Schema(implementation = _root_ide_package_.com.revet.documents.dto.CategoryDTO::class))]
         ),
-        APIResponse(responseCode = "404", description = "Category not found")
+        APIResponse(responseCode = "404", description = "Category not found"),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
     fun getCategory(
         @PathParam("id")
@@ -75,6 +81,7 @@ class CategoryResource @Inject constructor(
     }
 
     @POST
+    @RequiresPermission(action = Actions.Category.CREATE, resource = "urn:revet:documents:{tenantId}:category/*")
     @Operation(summary = "Create category", description = "Create a new category")
     @APIResponses(
         APIResponse(
@@ -82,7 +89,8 @@ class CategoryResource @Inject constructor(
             description = "Category created",
             content = [Content(mediaType = MediaType.APPLICATION_JSON, schema = Schema(implementation = _root_ide_package_.com.revet.documents.dto.CategoryDTO::class))]
         ),
-        APIResponse(responseCode = "400", description = "Invalid request")
+        APIResponse(responseCode = "400", description = "Invalid request"),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
     fun createCategory(request: com.revet.documents.dto.CreateCategoryRequest): Response {
         return try {
@@ -103,6 +111,7 @@ class CategoryResource @Inject constructor(
 
     @PUT
     @Path("/{id}")
+    @RequiresPermission(action = Actions.Category.UPDATE, resource = "urn:revet:documents:{tenantId}:category/{id}")
     @Operation(summary = "Update category", description = "Update an existing category")
     @APIResponses(
         APIResponse(
@@ -111,7 +120,8 @@ class CategoryResource @Inject constructor(
             content = [Content(mediaType = MediaType.APPLICATION_JSON, schema = Schema(implementation = _root_ide_package_.com.revet.documents.dto.CategoryDTO::class))]
         ),
         APIResponse(responseCode = "404", description = "Category not found"),
-        APIResponse(responseCode = "400", description = "Invalid request")
+        APIResponse(responseCode = "400", description = "Invalid request"),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
     fun updateCategory(
         @PathParam("id")
@@ -135,10 +145,12 @@ class CategoryResource @Inject constructor(
 
     @DELETE
     @Path("/{id}")
+    @RequiresPermission(action = Actions.Category.DELETE, resource = "urn:revet:documents:{tenantId}:category/{id}")
     @Operation(summary = "Delete category", description = "Delete a category")
     @APIResponses(
         APIResponse(responseCode = "204", description = "Category deleted"),
-        APIResponse(responseCode = "404", description = "Category not found")
+        APIResponse(responseCode = "404", description = "Category not found"),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
     fun deleteCategory(
         @PathParam("id")

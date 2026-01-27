@@ -7,6 +7,8 @@ import com.revet.documents.dto.DocumentDTO
 import com.revet.documents.dto.OrganizationDTO
 import com.revet.documents.dto.ProjectDTO
 import com.revet.documents.dto.SearchResultsDTO
+import com.revet.documents.permission.Actions
+import com.revethq.iam.permission.web.filter.RequiresPermission
 import com.revet.documents.service.SearchService
 import jakarta.inject.Inject
 import jakarta.ws.rs.*
@@ -31,6 +33,7 @@ class SearchResource @Inject constructor(
 ) {
 
     @GET
+    @RequiresPermission(action = Actions.Search.SEARCH_DOCUMENTS, resource = "urn:revet:documents:{tenantId}:document/*")
     @Operation(
         summary = "Search across all entities",
         description = "Perform full-text search across documents, projects, and organizations"
@@ -41,7 +44,8 @@ class SearchResource @Inject constructor(
             description = "Search results",
             content = [Content(mediaType = MediaType.APPLICATION_JSON, schema = Schema(implementation = _root_ide_package_.com.revet.documents.dto.SearchResultsDTO::class))]
         ),
-        APIResponse(responseCode = "400", description = "Invalid query parameter")
+        APIResponse(responseCode = "400", description = "Invalid query parameter"),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
     fun searchAll(
         @QueryParam("q")
@@ -78,6 +82,7 @@ class SearchResource @Inject constructor(
 
     @GET
     @Path("/documents")
+    @RequiresPermission(action = Actions.Search.SEARCH_DOCUMENTS, resource = "urn:revet:documents:{tenantId}:document/*")
     @Operation(
         summary = "Search documents",
         description = "Perform full-text search on documents (name, tags, MIME type)"
@@ -88,7 +93,8 @@ class SearchResource @Inject constructor(
             description = "Document search results",
             content = [Content(mediaType = MediaType.APPLICATION_JSON, schema = Schema(implementation = _root_ide_package_.com.revet.documents.dto.DocumentDTO::class))]
         ),
-        APIResponse(responseCode = "400", description = "Invalid query parameter")
+        APIResponse(responseCode = "400", description = "Invalid query parameter"),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
     fun searchDocuments(
         @QueryParam("q")
@@ -108,6 +114,7 @@ class SearchResource @Inject constructor(
 
     @GET
     @Path("/projects")
+    @RequiresPermission(action = Actions.Search.SEARCH_DOCUMENTS, resource = "urn:revet:documents:{tenantId}:project/*")
     @Operation(
         summary = "Search projects",
         description = "Perform full-text search on projects (name, description, tags)"
@@ -118,7 +125,8 @@ class SearchResource @Inject constructor(
             description = "Project search results",
             content = [Content(mediaType = MediaType.APPLICATION_JSON, schema = Schema(implementation = _root_ide_package_.com.revet.documents.dto.ProjectDTO::class))]
         ),
-        APIResponse(responseCode = "400", description = "Invalid query parameter")
+        APIResponse(responseCode = "400", description = "Invalid query parameter"),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
     fun searchProjects(
         @QueryParam("q")
@@ -138,6 +146,7 @@ class SearchResource @Inject constructor(
 
     @GET
     @Path("/organizations")
+    @RequiresPermission(action = Actions.Search.SEARCH_DOCUMENTS, resource = "urn:revet:documents:{tenantId}:organization/*")
     @Operation(
         summary = "Search organizations",
         description = "Perform full-text search on organizations (name, description)"
@@ -148,7 +157,8 @@ class SearchResource @Inject constructor(
             description = "Organization search results",
             content = [Content(mediaType = MediaType.APPLICATION_JSON, schema = Schema(implementation = _root_ide_package_.com.revet.documents.dto.OrganizationDTO::class))]
         ),
-        APIResponse(responseCode = "400", description = "Invalid query parameter")
+        APIResponse(responseCode = "400", description = "Invalid query parameter"),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
     fun searchOrganizations(
         @QueryParam("q")

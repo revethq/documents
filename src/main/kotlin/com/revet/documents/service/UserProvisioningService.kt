@@ -126,14 +126,11 @@ class UserProvisioningService @Inject constructor(
     }
 
     private fun attachGlobalAdminPolicy(user: User, tenantId: String?) {
-        val effectiveTenantId = tenantId ?: DEFAULT_TENANT_ID
+        // Use empty tenant ID since app is not multi-tenant
+        val effectiveTenantId = ""
         val adminPolicy = prebuiltPolicies.globalAdminPolicy()
         val savedPolicy = policyService.create(adminPolicy)
         val principalUrn = urn.userPrincipal(effectiveTenantId, user.id)
         policyAttachmentService.attach(savedPolicy.id, principalUrn, effectiveTenantId)
-    }
-
-    companion object {
-        private const val DEFAULT_TENANT_ID = "default"
     }
 }

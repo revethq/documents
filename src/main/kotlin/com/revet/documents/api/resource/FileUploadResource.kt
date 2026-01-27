@@ -2,6 +2,8 @@ package com.revet.documents.api.resource
 
 import com.revet.documents.api.mapper.DocumentVersionDTOMapper
 import com.revet.documents.dto.*
+import com.revet.documents.permission.Actions
+import com.revethq.iam.permission.web.filter.RequiresPermission
 import com.revet.documents.repository.DocumentVersionRepository
 import com.revet.documents.service.DocumentService
 import com.revet.documents.service.DocumentVersionService
@@ -39,6 +41,7 @@ class FileUploadResource @Inject constructor(
 
     @GET
     @Path("/download/{documentVersionUuid}")
+    @RequiresPermission(action = Actions.FileUpload.GET_DOWNLOAD_URL, resource = "urn:revet:documents:{tenantId}:document-version/{documentVersionUuid}")
     @Operation(
         summary = "Get download URL",
         description = "Get the download URL for a document version"
@@ -50,7 +53,8 @@ class FileUploadResource @Inject constructor(
             content = [Content(mediaType = MediaType.APPLICATION_JSON, schema = Schema(implementation = _root_ide_package_.com.revet.documents.dto.DownloadResponse::class))]
         ),
         APIResponse(responseCode = "404", description = "DocumentVersion not found"),
-        APIResponse(responseCode = "400", description = "File not available for download")
+        APIResponse(responseCode = "400", description = "File not available for download"),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
     fun getDownloadUrl(
         @PathParam("documentVersionUuid")
@@ -86,6 +90,7 @@ class FileUploadResource @Inject constructor(
 
     @POST
     @Path("/initiate-upload")
+    @RequiresPermission(action = Actions.FileUpload.INITIATE_UPLOAD, resource = "urn:revet:documents:{tenantId}:document-version/*")
     @Operation(
         summary = "Initiate file upload",
         description = "Create a document version in pending state and get a presigned upload URL"
@@ -97,7 +102,8 @@ class FileUploadResource @Inject constructor(
             content = [Content(mediaType = MediaType.APPLICATION_JSON, schema = Schema(implementation = _root_ide_package_.com.revet.documents.dto.InitiateUploadResponse::class))]
         ),
         APIResponse(responseCode = "404", description = "Document not found"),
-        APIResponse(responseCode = "400", description = "Storage not configured")
+        APIResponse(responseCode = "400", description = "Storage not configured"),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
     fun initiateUpload(request: com.revet.documents.dto.InitiateUploadRequest): Response {
         // Look up document by UUID
@@ -159,6 +165,7 @@ class FileUploadResource @Inject constructor(
 
     @POST
     @Path("/create-version")
+    @RequiresPermission(action = Actions.FileUpload.CREATE_VERSION_WITH_URL, resource = "urn:revet:documents:{tenantId}:document-version/*")
     @Operation(
         summary = "Create document version with URL",
         description = "Create a new document version with a file URL"
@@ -169,7 +176,8 @@ class FileUploadResource @Inject constructor(
             description = "Document version created",
             content = [Content(mediaType = MediaType.APPLICATION_JSON, schema = Schema(implementation = _root_ide_package_.com.revet.documents.dto.DocumentVersionDTO::class))]
         ),
-        APIResponse(responseCode = "400", description = "Invalid request")
+        APIResponse(responseCode = "400", description = "Invalid request"),
+        APIResponse(responseCode = "403", description = "Insufficient permissions")
     )
     fun createVersionWithUrl(request: com.revet.documents.dto.CreateDocumentVersionRequest): Response {
         return try {
