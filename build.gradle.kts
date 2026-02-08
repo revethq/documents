@@ -14,6 +14,7 @@ val quarkusPlatformArtifactId: String by project
 val quarkusPlatformVersion: String by project
 
 dependencies {
+    implementation("io.quarkus:quarkus-container-image-docker")
     implementation(enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}"))
     implementation("io.quarkus:quarkus-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
@@ -27,17 +28,19 @@ dependencies {
     implementation("io.quarkus:quarkus-hibernate-orm-panache-kotlin")
     implementation("io.quarkus:quarkus-jdbc-postgresql")
 
-    // S3 / MinIO for file storage
-    implementation(platform("software.amazon.awssdk:bom:2.28.11"))
-    implementation("software.amazon.awssdk:s3")
+    // S3 / MinIO for file storage (Quarkiverse - native compatible)
+    implementation(enforcedPlatform("io.quarkus.platform:quarkus-amazon-services-bom:3.17.4"))
+    implementation("io.quarkiverse.amazonservices:quarkus-amazon-s3")
     implementation("software.amazon.awssdk:url-connection-client")
 
-    // Google Cloud Storage
-    implementation(platform("com.google.cloud:libraries-bom:26.32.0"))
-    implementation("com.google.cloud:google-cloud-storage")
+    // Google Cloud Storage (Quarkiverse - native compatible)
+    implementation("io.quarkiverse.googlecloudservices:quarkus-google-cloud-storage:2.12.1")
 
     // OpenAPI and Swagger UI
     implementation("io.quarkus:quarkus-smallrye-openapi")
+
+    // Health checks (liveness, readiness, startup probes)
+    implementation("io.quarkus:quarkus-smallrye-health")
 
     // JWT Authentication
     implementation("io.quarkus:quarkus-smallrye-jwt")
