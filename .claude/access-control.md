@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Kala API uses a **two-dimensional permission inheritance** model:
+Revet Documents uses a **two-dimensional permission inheritance** model:
 
 1. **Permission Type Hierarchy** - higher permissions imply lower ones
 2. **Resource Hierarchy** - permissions on parent resources grant access to children

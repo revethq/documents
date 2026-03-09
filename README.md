@@ -1,6 +1,6 @@
-# Kala API
+# Revet Documents
 
-Modern REST API for the Kala Document Management System, built with Kotlin, Quarkus, and Panache.
+Modern REST API for the Revet Document Management System, built with Kotlin, Quarkus, and Panache.
 
 ## Features
 
@@ -13,18 +13,18 @@ Modern REST API for the Kala Document Management System, built with Kotlin, Quar
 
 ## Technology Stack
 
-- **Kotlin**: 2.0.21
-- **Quarkus**: 3.17.4
-- **Gradle**: 8.11.1
-- **Java**: 21
+- **Kotlin**: 2.3.10
+- **Quarkus**: 3.31.1
+- **Gradle**: 9.3.1
+- **Java**: 25
 - **PostgreSQL**: Latest
 - **Hibernate Panache**: Kotlin variant
 
 ## Prerequisites
 
-- Java 21 or higher
+- Java 25 or higher
 - Docker and Docker Compose (for database)
-- Gradle 8.11.1 or higher (wrapper included)
+- Gradle 9.3.1 or higher (wrapper included)
 
 ## Getting Started
 
@@ -32,10 +32,10 @@ Modern REST API for the Kala Document Management System, built with Kotlin, Quar
 
 ```bash
 docker run -d \
-  --name kala-postgres \
-  -e POSTGRES_DB=kala \
-  -e POSTGRES_USER=kala \
-  -e POSTGRES_PASSWORD=kala \
+  --name revet-postgres \
+  -e POSTGRES_DB=revet \
+  -e POSTGRES_USER=revet \
+  -e POSTGRES_PASSWORD=revet \
   -p 5432:5432 \
   postgres:16
 ```
@@ -43,15 +43,15 @@ docker run -d \
 ### 2. Run the Application in Dev Mode
 
 ```bash
-./gradlew quarkusDev
+./gradlew :web:quarkusDev
 ```
 
-The application will start on `http://localhost:8080`
+The application will start on `http://localhost:5051`
 
 ### 3. Access the API Documentation
 
-- **Swagger UI**: http://localhost:8080/swagger-ui
-- **OpenAPI Spec**: http://localhost:8080/openapi
+- **Swagger UI**: http://localhost:5051/swagger-ui
+- **OpenAPI Spec**: http://localhost:5051/openapi
 
 ## Available Endpoints
 
@@ -66,28 +66,38 @@ The application will start on `http://localhost:8080`
 
 ## Project Structure
 
+The project is a multi-module Gradle build with three submodules:
+
+- **`core`** - Domain models, repository interfaces, and service interfaces (no framework dependencies)
+- **`persistence-runtime`** - Panache entities, entity mappers, repository implementations, service implementations, and permission CDI beans (depends on `core`). Usable as a standalone library by other Revet services.
+- **`web`** - REST resources, DTOs, DTO mappers, security filters, and application configuration (depends on `core` and `persistence-runtime`)
+
 ```
-kala-api/
-├── src/
-│   ├── main/
-│   │   ├── kotlin/com/ndptc/kala/
-│   │   │   ├── domain/              # Core business models (framework-agnostic)
-│   │   │   ├── repository/          # Data access layer
-│   │   │   │   ├── entity/          # Panache entities
-│   │   │   │   └── mapper/          # Entity ↔ Domain mappers
-│   │   │   ├── service/             # Business logic layer
-│   │   │   ├── api/                 # REST API layer
-│   │   │   │   ├── resource/        # JAX-RS resources (REST endpoints)
-│   │   │   │   └── mapper/          # Domain ↔ DTO mappers
-│   │   │   └── dto/                 # Data transfer objects
-│   │   └── resources/
-│   │       └── application.properties
-│   └── test/
-│       └── kotlin/
-├── build.gradle.kts
+revet-documents/
+├── core/                                # Domain + interfaces
+│   └── src/main/kotlin/com/revethq/documents/
+│       ├── domain/                      # Core business models (framework-agnostic)
+│       ├── repository/                  # Repository interfaces
+│       └── service/                     # Service interfaces
+├── persistence-runtime/                 # Business logic + data access
+│   └── src/main/kotlin/com/revethq/documents/
+│       ├── repository/
+│       │   ├── entity/                  # Panache entities
+│       │   └── mapper/                  # Entity ↔ Domain mappers
+│       ├── service/                     # Service implementations
+│       └── permission/                  # Permission CDI beans
+├── web/                                 # REST API layer
+│   └── src/main/kotlin/com/revethq/documents/
+│       ├── api/
+│       │   ├── resource/               # JAX-RS resources (REST endpoints)
+│       │   └── mapper/                 # Domain ↔ DTO mappers
+│       └── dto/                        # Data transfer objects
+│   └── src/main/resources/
+│       └── application.properties
+├── build.gradle.kts                     # Root build config
 ├── settings.gradle.kts
 ├── gradle.properties
-├── ARCHITECTURE.md              # Detailed architecture documentation
+├── ARCHITECTURE.md                      # Detailed architecture documentation
 └── README.md
 ```
 
@@ -131,7 +141,7 @@ Key benefits:
 ### Running in Production Mode
 
 ```bash
-java -jar build/quarkus-app/quarkus-run.jar
+java -jar web/build/quarkus-app/quarkus-run.jar
 ```
 
 ### Native Build (GraalVM)
@@ -142,11 +152,11 @@ java -jar build/quarkus-app/quarkus-run.jar
 
 ## Configuration
 
-Key configuration properties in `src/main/resources/application.properties`:
+Key configuration properties in `web/src/main/resources/application.properties`:
 
-- **HTTP Port**: `quarkus.http.port=8080`
+- **HTTP Port**: `quarkus.http.port=5051`
 - **CORS Origins**: `quarkus.http.cors.origins=http://localhost:3001`
-- **Database URL**: `quarkus.datasource.jdbc.url=jdbc:postgresql://localhost:5432/kala`
+- **Database URL**: `quarkus.datasource.jdbc.url=jdbc:postgresql://localhost:5432/revet`
 - **OpenAPI Path**: `quarkus.smallrye-openapi.path=/openapi`
 - **Swagger UI Path**: `quarkus.swagger-ui.path=/swagger-ui`
 
@@ -161,12 +171,12 @@ The API is configured to allow CORS requests from `http://localhost:3001` with t
 
 ## Database Schema
 
-The application uses Hibernate ORM with automatic schema generation. The database schema is created/updated automatically on application startup.
+The application uses Flyway for database migrations. The database schema is managed through migration scripts in `web/src/main/resources/db/migration/`.
 
 ### Organizations Table
 
 ```sql
-CREATE TABLE organizations (
+CREATE TABLE revet_organizations (
     id BIGSERIAL PRIMARY KEY,
     uuid UUID UNIQUE NOT NULL,
     name VARCHAR(255) NOT NULL,
@@ -191,11 +201,11 @@ CREATE TABLE organizations (
 ### Create Organization
 
 ```bash
-curl -X POST http://localhost:8080/api/v1/organizations \
+curl -X POST http://localhost:5051/api/v1/organizations \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "NDPTC",
-    "description": "National Domestic Preparedness Training Center",
+    "name": "Revet",
+    "description": "Revet Document Management",
     "city": "Anniston",
     "state": "Alabama",
     "country": "USA"
@@ -205,19 +215,19 @@ curl -X POST http://localhost:8080/api/v1/organizations \
 ### List Organizations
 
 ```bash
-curl http://localhost:8080/api/v1/organizations
+curl http://localhost:5051/api/v1/organizations
 ```
 
 ### Get Organization by ID
 
 ```bash
-curl http://localhost:8080/api/v1/organizations/1
+curl http://localhost:5051/api/v1/organizations/1
 ```
 
 ### Update Organization
 
 ```bash
-curl -X PUT http://localhost:8080/api/v1/organizations/1 \
+curl -X PUT http://localhost:5051/api/v1/organizations/1 \
   -H "Content-Type: application/json" \
   -d '{
     "description": "Updated description"
@@ -227,21 +237,8 @@ curl -X PUT http://localhost:8080/api/v1/organizations/1 \
 ### Delete Organization
 
 ```bash
-curl -X DELETE http://localhost:8080/api/v1/organizations/1
+curl -X DELETE http://localhost:5051/api/v1/organizations/1
 ```
-
-## Next Steps
-
-Based on the Django Kala application, the following entities should be implemented:
-
-- [ ] Users (with authentication)
-- [ ] Projects
-- [ ] Documents
-- [ ] Document Versions
-- [ ] Categories
-- [ ] Permissions (Organization, Project, Document levels)
-- [ ] Tags
-- [ ] Exports
 
 ## License
 

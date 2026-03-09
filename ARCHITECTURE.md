@@ -1,8 +1,8 @@
-# Kala API Architecture
+# Revet Documents Architecture
 
 ## Overview
 
-The Kala API is built using a **layered architecture** with clear separation of concerns. The architecture follows Domain-Driven Design (DDD) principles with distinct layers for API, Domain, Service, and Repository.
+Revet Documents is built using a **layered architecture** with clear separation of concerns. The architecture follows Domain-Driven Design (DDD) principles with distinct layers for API, Domain, Service, and Repository.
 
 ## Architecture Layers
 
@@ -42,7 +42,7 @@ The Kala API is built using a **layered architecture** with clear separation of 
 
 ## Core Components
 
-### 1. Domain Layer (`com.ndptc.kala.domain`)
+### 1. Domain Layer (`com.revethq.documents.domain`)
 
 **Purpose**: Contains pure business logic and domain models, independent of frameworks and infrastructure.
 
@@ -71,7 +71,7 @@ data class Organization(
 **Files**:
 - `domain/Organization.kt` - Core domain model with business methods
 
-### 2. Repository Layer (`com.ndptc.kala.repository`)
+### 2. Repository Layer (`com.revethq.documents.repository`)
 
 **Purpose**: Abstracts data access and persistence, converting between Domain models and Persistence entities.
 
@@ -104,7 +104,7 @@ class OrganizationRepositoryImpl : OrganizationRepository {
 - `repository/entity/OrganizationEntity.kt` - Panache entity for persistence
 - `repository/mapper/OrganizationMapper.kt` - Maps Entity ↔ Domain
 
-### 3. Service Layer (`com.ndptc.kala.service`)
+### 3. Service Layer (`com.revethq.documents.service`)
 
 **Purpose**: Contains business logic, orchestrates operations, and enforces business rules.
 
@@ -137,7 +137,7 @@ class OrganizationServiceImpl @Inject constructor(
 **Files**:
 - `service/OrganizationService.kt` - Service interface and implementation
 
-### 4. API/Resource Layer (`com.ndptc.kala.api`)
+### 4. API/Resource Layer (`com.revethq.documents.api`)
 
 **Purpose**: Exposes REST endpoints, handles HTTP concerns, and maps between DTOs and Domain models.
 
@@ -264,26 +264,42 @@ Domain Layer (depends on nothing)
 
 ## Package Structure
 
+The project is a multi-module Gradle build with three submodules. Each module's sources live under `{module}/src/main/kotlin/com/revethq/documents/`.
+
 ```
-src/main/kotlin/com/ndptc/kala/
-├── domain/                    # Core business models
-│   └── Organization.kt
-├── repository/                # Data access layer
-│   ├── OrganizationRepository.kt
-│   ├── entity/
-│   │   └── OrganizationEntity.kt
-│   └── mapper/
-│       └── OrganizationMapper.kt
-├── service/                   # Business logic layer
-│   └── OrganizationService.kt
-├── api/                       # REST API layer
-│   ├── resource/
-│   │   └── OrganizationResource.kt
-│   └── mapper/
-│       └── OrganizationDTOMapper.kt
-└── dto/                       # API request/response objects
-    └── OrganizationDTO.kt
+revet-documents/
+├── core/                                  # Domain + interfaces (no framework deps)
+│   └── src/main/kotlin/com/revethq/documents/
+│       ├── domain/                        # Core business models
+│       │   └── Organization.kt
+│       ├── repository/                    # Repository interfaces
+│       │   └── OrganizationRepository.kt
+│       └── service/                       # Service interfaces
+│           └── OrganizationService.kt
+├── persistence-runtime/                   # Entities + repo/service impls (depends on core)
+│   └── src/main/kotlin/com/revethq/documents/
+│       ├── repository/
+│       │   ├── OrganizationRepositoryImpl.kt
+│       │   ├── entity/
+│       │   │   └── OrganizationEntity.kt
+│       │   └── mapper/
+│       │       └── OrganizationMapper.kt
+│       └── service/                       # Service implementations
+│           └── OrganizationServiceImpl.kt
+├── web/                                   # Resources + DTOs (depends on core, persistence-runtime)
+│   └── src/main/kotlin/com/revethq/documents/
+│       ├── api/                           # REST API layer
+│       │   ├── resource/
+│       │   │   └── OrganizationResource.kt
+│       │   └── mapper/
+│       │       └── OrganizationDTOMapper.kt
+│       └── dto/                           # API request/response objects
+│           └── OrganizationDTO.kt
+├── build.gradle.kts                       # Root build config
+└── settings.gradle.kts                    # Includes core, persistence-runtime, web
 ```
+
+**Module dependencies**: `web` depends on `core` and `persistence-runtime`. `persistence-runtime` depends on `core`.
 
 ## Design Patterns Used
 
@@ -366,6 +382,8 @@ src/main/kotlin/com/ndptc/kala/
 
 ### Adding a New Entity (e.g., Project)
 
+#### `core` module
+
 1. **Create Domain Model** (`domain/Project.kt`)
    ```kotlin
    data class Project(...) {
@@ -376,20 +394,25 @@ src/main/kotlin/com/ndptc/kala/
    }
    ```
 
-2. **Create Persistence Entity** (`repository/entity/ProjectEntity.kt`)
+2. **Create Repository Interface** (`repository/ProjectRepository.kt`)
+   ```kotlin
+   interface ProjectRepository { ... }
+   ```
+
+3. **Create Service Interface** (`service/ProjectService.kt`)
+   ```kotlin
+   interface ProjectService { ... }
+   ```
+
+#### `persistence-runtime` module
+
+4. **Create Persistence Entity** (`repository/entity/ProjectEntity.kt`)
    ```kotlin
    @Entity
    class ProjectEntity : PanacheEntity() { ... }
    ```
 
-3. **Create Repository** (`repository/ProjectRepository.kt`)
-   ```kotlin
-   interface ProjectRepository { ... }
-   @ApplicationScoped
-   class ProjectRepositoryImpl : ProjectRepository { ... }
-   ```
-
-4. **Create Mapper** (`repository/mapper/ProjectMapper.kt`)
+5. **Create Entity Mapper** (`repository/mapper/ProjectMapper.kt`)
    ```kotlin
    object ProjectMapper {
        fun toDomain(entity: ProjectEntity): Project
@@ -397,33 +420,42 @@ src/main/kotlin/com/ndptc/kala/
    }
    ```
 
-5. **Create Service** (`service/ProjectService.kt`)
+6. **Create Repository Implementation** (`repository/ProjectRepositoryImpl.kt`)
    ```kotlin
-   interface ProjectService { ... }
    @ApplicationScoped
-   class ProjectServiceImpl : ProjectService { ... }
+   class ProjectRepositoryImpl : ProjectRepository { ... }
    ```
 
-6. **Create DTOs** (`dto/ProjectDTO.kt`)
+7. **Create Service Implementation** (`service/ProjectServiceImpl.kt`)
+   ```kotlin
+   @ApplicationScoped
+   class ProjectServiceImpl @Inject constructor(
+       private val projectRepository: ProjectRepository
+   ) : ProjectService { ... }
+   ```
+
+#### `web` module
+
+8. **Create DTOs** (`dto/ProjectDTO.kt`)
    ```kotlin
    data class ProjectDTO(...)
    data class CreateProjectRequest(...)
    ```
 
-7. **Create API Mapper** (`api/mapper/ProjectDTOMapper.kt`)
+9. **Create API Mapper** (`api/mapper/ProjectDTOMapper.kt`)
    ```kotlin
    object ProjectDTOMapper {
        fun toDTO(domain: Project): ProjectDTO
    }
    ```
 
-8. **Create Resource** (`api/resource/ProjectResource.kt`)
-   ```kotlin
-   @Path("/api/v1/projects")
-   class ProjectResource @Inject constructor(
-       private val projectService: ProjectService
-   ) { ... }
-   ```
+10. **Create Resource** (`api/resource/ProjectResource.kt`)
+    ```kotlin
+    @Path("/api/v1/projects")
+    class ProjectResource @Inject constructor(
+        private val projectService: ProjectService
+    ) { ... }
+    ```
 
 ## Common Operations
 
@@ -477,7 +509,7 @@ All API errors use **RFC 9457 Problem Details** format for consistent, machine-r
 
 ```json
 {
-  "type": "https://kala.ndptc.com/problems/validation-error",
+  "type": "https://docs.revethq.com/problems/validation-error",
   "title": "Validation Error",
   "status": 400,
   "detail": "The 'name' field cannot be empty",
@@ -495,7 +527,7 @@ All API errors use **RFC 9457 Problem Details** format for consistent, machine-r
 
 ### Problem Types
 
-Define problem types as URIs under `https://kala.ndptc.com/problems/`:
+Define problem types as URIs under `https://docs.revethq.com/problems/`:
 
 | Type | Status | Usage |
 |------|--------|-------|
@@ -521,7 +553,7 @@ class DocumentNotFoundExceptionMapper : ExceptionMapper<DocumentNotFoundExceptio
         return Response.status(404)
             .type("application/problem+json")
             .entity(ProblemDetail(
-                type = "https://kala.ndptc.com/problems/not-found",
+                type = "https://docs.revethq.com/problems/not-found",
                 title = "Document Not Found",
                 status = 404,
                 detail = "Document with ID ${e.documentId} was not found"

@@ -69,7 +69,7 @@ services:
   # Documents API (Quarkus dev mode with hot-reload)
   # ==========================================================================
   api:
-    image: eclipse-temurin:21-jdk
+    image: eclipse-temurin:25-jdk
     working_dir: /app
     command: ./gradlew quarkusDev
     depends_on:

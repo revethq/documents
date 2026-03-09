@@ -1,0 +1,52 @@
+[versions]
+quarkus = "3.31.1"
+kotlin = "2.3.10"
+ktlint = "14.0.1"
+mockk = "1.14.9"
+revet-core = "0.1.0"
+revet-iam = "0.1.16"
+revet-buckets = "0.1.1"
+google-cloud-storage = "2.20.1"
+
+[libraries]
+quarkus-bom = { module = "io.quarkus.platform:quarkus-bom", version.ref = "quarkus" }
+quarkus-amazon-services-bom = { module = "io.quarkus.platform:quarkus-amazon-services-bom", version.ref = "quarkus" }
+quarkus-kotlin = { module = "io.quarkus:quarkus-kotlin" }
+quarkus-arc = { module = "io.quarkus:quarkus-arc" }
+quarkus-rest = { module = "io.quarkus:quarkus-rest" }
+quarkus-rest-jackson = { module = "io.quarkus:quarkus-rest-jackson" }
+quarkus-hibernate-orm-panache-kotlin = { module = "io.quarkus:quarkus-hibernate-orm-panache-kotlin" }
+quarkus-jdbc-postgresql = { module = "io.quarkus:quarkus-jdbc-postgresql" }
+quarkus-smallrye-openapi = { module = "io.quarkus:quarkus-smallrye-openapi" }
+quarkus-smallrye-health = { module = "io.quarkus:quarkus-smallrye-health" }
+quarkus-smallrye-jwt = { module = "io.quarkus:quarkus-smallrye-jwt" }
+quarkus-reactive-routes = { module = "io.quarkus:quarkus-reactive-routes" }
+quarkus-container-image-docker = { module = "io.quarkus:quarkus-container-image-docker" }
+quarkus-amazon-s3 = { module = "io.quarkiverse.amazonservices:quarkus-amazon-s3" }
+aws-url-connection-client = { module = "software.amazon.awssdk:url-connection-client" }
+google-cloud-storage = { module = "io.quarkiverse.googlecloudservices:quarkus-google-cloud-storage", version.ref = "google-cloud-storage" }
+kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8" }
+revet-core = { module = "com.revethq:revet-core", version.ref = "revet-core" }
+revet-iam-user = { module = "com.revethq.iam:revet-user", version.ref = "revet-iam" }
+revet-iam-user-persistence = { module = "com.revethq.iam:revet-user-persistence-runtime", version.ref = "revet-iam" }
+revet-iam-user-web = { module = "com.revethq.iam:revet-user-web", version.ref = "revet-iam" }
+revet-iam-permission = { module = "com.revethq.iam:revet-permission", version.ref = "revet-iam" }
+revet-iam-permission-persistence = { module = "com.revethq.iam:revet-permission-persistence-runtime", version.ref = "revet-iam" }
+revet-iam-permission-web = { module = "com.revethq.iam:revet-permission-web", version.ref = "revet-iam" }
+revet-iam-scim = { module = "com.revethq.iam:revet-scim", version.ref = "revet-iam" }
+revet-buckets-core = { module = "com.revethq.buckets:revet-buckets-core", version.ref = "revet-buckets" }
+revet-buckets-web = { module = "com.revethq.buckets:revet-buckets-web", version.ref = "revet-buckets" }
+revet-buckets-persistence = { module = "com.revethq.buckets:revet-buckets-persistence-runtime", version.ref = "revet-buckets" }
+revet-buckets-provider-s3 = { module = "com.revethq.buckets:revet-buckets-provider-s3", version.ref = "revet-buckets" }
+revet-buckets-provider-gcs = { module = "com.revethq.buckets:revet-buckets-provider-gcs", version.ref = "revet-buckets" }
+quarkus-junit5 = { module = "io.quarkus:quarkus-junit5" }
+quarkus-junit5-mockito = { module = "io.quarkus:quarkus-junit5-mockito" }
+rest-assured = { module = "io.rest-assured:rest-assured" }
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+
+[plugins]
+quarkus = { id = "io.quarkus", version.ref = "quarkus" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-allopen = { id = "org.jetbrains.kotlin.plugin.allopen", version.ref = "kotlin" }
+kotlin-noarg = { id = "org.jetbrains.kotlin.plugin.noarg", version.ref = "kotlin" }
+ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }

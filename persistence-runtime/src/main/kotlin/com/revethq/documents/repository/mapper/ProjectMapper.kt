@@ -1,0 +1,59 @@
+package com.revethq.documents.repository.mapper
+
+import com.revethq.documents.domain.Project
+import com.revethq.documents.repository.entity.ProjectEntity
+
+/**
+ * Maps between Domain Project and ProjectEntity (Panache).
+ */
+object ProjectMapper {
+    fun toDomain(entity: com.revethq.documents.repository.entity.ProjectEntity): com.revethq.documents.domain.Project =
+        com.revethq.documents.domain.Project(
+            id = entity.id,
+            uuid = entity.uuid,
+            name = entity.name,
+            description = entity.description,
+            organizationId =
+                entity.organization?.id
+                    ?: throw IllegalStateException("Project must have an organization"),
+            clientIds = entity.clientIds.toSet(),
+            tags = entity.tags.toSet(),
+            isActive = entity.isActive,
+            timestamps =
+                com.revethq.documents.domain.Project.Timestamps(
+                    createdAt = entity.createdAt,
+                    modifiedAt = entity.modifiedAt,
+                    removedAt = entity.removedAt,
+                ),
+        )
+
+    fun toEntity(domain: com.revethq.documents.domain.Project): com.revethq.documents.repository.entity.ProjectEntity =
+        com.revethq.documents.repository.entity.ProjectEntity().apply {
+            domain.id?.let { this.id = it }
+            this.uuid = domain.uuid
+            this.name = domain.name
+            this.description = domain.description
+            this.isActive = domain.isActive
+            this.createdAt = domain.timestamps.createdAt
+            this.modifiedAt = domain.timestamps.modifiedAt
+            this.removedAt = domain.timestamps.removedAt
+            this.tags = domain.tags.toMutableSet()
+            // Organization and clients need to be set separately after entity is created
+        }
+
+    fun updateEntity(
+        entity: com.revethq.documents.repository.entity.ProjectEntity,
+        domain: com.revethq.documents.domain.Project,
+    ): com.revethq.documents.repository.entity.ProjectEntity {
+        entity.apply {
+            name = domain.name
+            description = domain.description
+            isActive = domain.isActive
+            modifiedAt = domain.timestamps.modifiedAt
+            removedAt = domain.timestamps.removedAt
+            tags = domain.tags.toMutableSet()
+            // Clients need to be updated separately
+        }
+        return entity
+    }
+}

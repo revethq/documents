@@ -1,25 +1,50 @@
+<!-- OPENSPEC:START -->
+# OpenSpec Instructions
+
+These instructions are for AI assistants working in this project.
+
+Always open `@/openspec/AGENTS.md` when the request:
+- Mentions planning or proposals (words like proposal, spec, change, plan)
+- Introduces new capabilities, breaking changes, architecture shifts, or big performance/security work
+- Sounds ambiguous and you need the authoritative spec before coding
+
+Use `@/openspec/AGENTS.md` to learn:
+- How to create and apply change proposals
+- Spec format and conventions
+- Project structure and guidelines
+
+Keep this managed block so 'openspec update' can refresh the instructions.
+
+<!-- OPENSPEC:END -->
+
 # CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
 
-Kala API is a document management system REST API built with Kotlin, Quarkus 3.17.4, and Hibernate Panache. It requires Java 21.
+Revet Documents is a document management system REST API built with Kotlin 2.3.10, Quarkus 3.31.1, and Hibernate Panache. It requires Java 25.
+
+The project is organized as a multi-module Gradle build with three submodules:
+
+- **`core`** - Domain models, repository interfaces, and service interfaces (no framework dependencies)
+- **`persistence-runtime`** - Panache entities, entity mappers, repository implementations, service implementations, and permission CDI beans (depends on `core`). Usable as a standalone library by other Revet services without pulling in the REST API.
+- **`web`** - REST resources, DTOs, DTO mappers, security filters, and application configuration (depends on `core` and `persistence-runtime`)
 
 ## Common Commands
 
 ```bash
 # Start development server (hot-reload enabled)
-./gradlew quarkusDev
+./gradlew :web:quarkusDev
 
-# Run tests
+# Run tests (all modules)
 ./gradlew test
 
 # Build for production
 ./gradlew build
 
 # Run production build
-java -jar build/quarkus-app/quarkus-run.jar
+java -jar web/build/quarkus-app/quarkus-run.jar
 
 # Native build (requires GraalVM)
 ./gradlew build -Dquarkus.package.type=native
@@ -27,7 +52,7 @@ java -jar build/quarkus-app/quarkus-run.jar
 
 ## Dependencies
 
-- **PostgreSQL**: Run on port 5444 with database/user/password all set to `kala`
+- **PostgreSQL**: Run on port 5432 with database/user/password all set to `revet`
 - **MinIO/S3**: Run on port 9000 for document file storage (credentials: minioadmin/minioadmin)
 
 ## Architecture
@@ -40,16 +65,18 @@ Client → Resource (DTO) → Service (Domain) → Repository (Domain ↔ Entity
 
 ### Layer Responsibilities
 
-| Layer | Package | Purpose |
-|-------|---------|---------|
-| API | `api/resource/` | JAX-RS REST endpoints, HTTP handling |
-| DTO Mapper | `api/mapper/` | Converts Domain ↔ DTO |
-| Service | `service/` | Business logic, validation, transaction boundaries |
-| Repository | `repository/` | Data access abstraction |
-| Entity Mapper | `repository/mapper/` | Converts Domain ↔ Entity |
-| Entity | `repository/entity/` | Panache entities (persistence) |
-| Domain | `domain/` | Core business models (framework-agnostic, immutable) |
-| DTO | `dto/` | API request/response objects |
+| Layer | Module | Package | Purpose |
+|-------|--------|---------|---------|
+| API | `web` | `api/resource/` | JAX-RS REST endpoints, HTTP handling |
+| DTO Mapper | `web` | `api/mapper/` | Converts Domain ↔ DTO |
+| Service Interface | `core` | `service/` | Service contracts |
+| Service Impl | `persistence-runtime` | `service/` | Business logic, validation, transaction boundaries |
+| Repository Interface | `core` | `repository/` | Data access contracts |
+| Repository Impl | `persistence-runtime` | `repository/` | Data access implementation |
+| Entity Mapper | `persistence-runtime` | `repository/mapper/` | Converts Domain ↔ Entity |
+| Entity | `persistence-runtime` | `repository/entity/` | Panache entities (persistence) |
+| Domain | `core` | `domain/` | Core business models (framework-agnostic, immutable) |
+| DTO | `web` | `dto/` | API request/response objects |
 
 ### Key Principle
 
@@ -59,14 +86,21 @@ Domain models have no framework dependencies. Dependencies flow inward: API → 
 
 Follow this order when adding a new entity (e.g., `Widget`):
 
+**`core` module:**
 1. `domain/Widget.kt` - Domain model with `create()` companion and `update()` methods
-2. `repository/entity/WidgetEntity.kt` - Panache entity with `@Entity`
-3. `repository/mapper/WidgetMapper.kt` - Object with `toDomain()` and `toEntity()`
-4. `repository/WidgetRepository.kt` - Interface + `@ApplicationScoped` implementation
-5. `service/WidgetService.kt` - Interface + implementation with business logic
-6. `dto/WidgetDTO.kt` - DTOs for API contracts
-7. `api/mapper/WidgetDTOMapper.kt` - Object with `toDTO()` method
-8. `api/resource/WidgetResource.kt` - `@Path("/api/v1/widgets")` JAX-RS resource
+2. `repository/WidgetRepository.kt` - Repository interface
+3. `service/WidgetService.kt` - Service interface
+
+**`persistence-runtime` module:**
+4. `repository/entity/WidgetEntity.kt` - Panache entity with `@Entity`
+5. `repository/mapper/WidgetMapper.kt` - Object with `toDomain()` and `toEntity()`
+6. `repository/WidgetRepositoryImpl.kt` - `@ApplicationScoped` repository implementation
+7. `service/WidgetServiceImpl.kt` - `@ApplicationScoped` service implementation with business logic
+
+**`web` module:**
+8. `dto/WidgetDTO.kt` - DTOs for API contracts
+9. `api/mapper/WidgetDTOMapper.kt` - Object with `toDTO()` method
+10. `api/resource/WidgetResource.kt` - `@Path("/api/v1/widgets")` JAX-RS resource
 
 ## Error Handling
 
@@ -74,7 +108,7 @@ All API errors must use **RFC 9457 Problem Details** format with content type `a
 
 ```json
 {
-  "type": "https://kala.ndptc.com/problems/not-found",
+  "type": "https://docs.revethq.com/problems/not-found",
   "title": "Resource Not Found",
   "status": 404,
   "detail": "Document with ID 123 was not found",

@@ -1,0 +1,52 @@
+package com.revethq.documents.dto
+
+import java.time.LocalDateTime
+import java.util.UUID
+
+/**
+ * Data Transfer Object for Project.
+ */
+data class ProjectDTO(
+    val id: Long?,
+    val uuid: UUID,
+    val name: String,
+    val description: String?,
+    val organizationId: Long,
+    val clientIds: Set<UUID>,
+    val tags: Set<String>,
+    val isActive: Boolean,
+    val createdAt: LocalDateTime,
+    val modifiedAt: LocalDateTime,
+)
+
+data class CreateProjectRequest(
+    val name: String,
+    val organizationId: Long,
+    val description: String? = null,
+    val clientIds: Set<UUID> = emptySet(),
+    val tags: Set<String> = emptySet(),
+)
+
+data class UpdateProjectRequest(
+    val name: String? = null,
+    val description: String? = null,
+    val clientIds: Set<UUID>? = null,
+    val tags: Set<String>? = null,
+    val isActive: Boolean? = null,
+)
+
+data class AddClientRequest(
+    val clientId: UUID,
+)
+
+data class RemoveClientRequest(
+    val clientId: UUID,
+)
+
+data class AddTagRequest(
+    val tag: String,
+)
+
+data class RemoveTagRequest(
+    val tag: String,
+)
