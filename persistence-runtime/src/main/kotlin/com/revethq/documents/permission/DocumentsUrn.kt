@@ -19,6 +19,7 @@ class DocumentsUrn {
 
     companion object {
         const val SERVICE = "documents"
+        const val CORE_SERVICE = "core"
     }
 
     object ResourceType {
@@ -48,6 +49,23 @@ class DocumentsUrn {
         resourceType: String,
     ): String = "urn:$namespace:$SERVICE:$tenant:$resourceType/*"
 
+    fun buildCore(
+        tenant: String,
+        resourceType: String,
+        resourceId: String,
+    ): String = "urn:$namespace:$CORE_SERVICE:$tenant:$resourceType/$resourceId"
+
+    fun buildCore(
+        tenant: String,
+        resourceType: String,
+        resourceId: UUID,
+    ): String = buildCore(tenant, resourceType, resourceId.toString())
+
+    fun wildcardCore(
+        tenant: String,
+        resourceType: String,
+    ): String = "urn:$namespace:$CORE_SERVICE:$tenant:$resourceType/*"
+
     fun wildcardAllTenants(resourceType: String): String = "urn:$namespace:$SERVICE:*:$resourceType/*"
 
     fun wildcardAll(): String = "urn:$namespace:$SERVICE:*:*/*"
@@ -55,26 +73,26 @@ class DocumentsUrn {
     fun organization(
         tenant: String,
         id: UUID,
-    ) = build(tenant, ResourceType.ORGANIZATION, id)
+    ) = buildCore(tenant, ResourceType.ORGANIZATION, id)
 
     fun organization(
         tenant: String,
         id: String,
-    ) = build(tenant, ResourceType.ORGANIZATION, id)
+    ) = buildCore(tenant, ResourceType.ORGANIZATION, id)
 
-    fun organizationWildcard(tenant: String) = wildcard(tenant, ResourceType.ORGANIZATION)
+    fun organizationWildcard(tenant: String) = wildcardCore(tenant, ResourceType.ORGANIZATION)
 
     fun project(
         tenant: String,
         id: UUID,
-    ) = build(tenant, ResourceType.PROJECT, id)
+    ) = buildCore(tenant, ResourceType.PROJECT, id)
 
     fun project(
         tenant: String,
         id: String,
-    ) = build(tenant, ResourceType.PROJECT, id)
+    ) = buildCore(tenant, ResourceType.PROJECT, id)
 
-    fun projectWildcard(tenant: String) = wildcard(tenant, ResourceType.PROJECT)
+    fun projectWildcard(tenant: String) = wildcardCore(tenant, ResourceType.PROJECT)
 
     fun document(
         tenant: String,

@@ -1,23 +1,17 @@
 package com.revethq.documents.security
 
+import com.revethq.documents.service.CurrentUserService
+import io.quarkus.security.identity.SecurityIdentity
 import jakarta.enterprise.context.RequestScoped
-import jakarta.ws.rs.core.Context
-import jakarta.ws.rs.core.SecurityContext
+import jakarta.inject.Inject
 import java.util.UUID
 
 @RequestScoped
-class CurrentUserServiceImpl : CurrentUserService {
-    @Context
-    lateinit var securityContext: SecurityContext
-
-    override fun getCurrentUserUuid(): UUID? {
-        val principal = securityContext.userPrincipal ?: return null
-        val sub = principal.name ?: return null
-
-        return try {
-            UUID.fromString(sub)
-        } catch (e: IllegalArgumentException) {
-            null
-        }
+class CurrentUserServiceImpl
+    @Inject
+    constructor(
+        private val securityIdentity: SecurityIdentity,
+    ) : CurrentUserService {
+        override fun getCurrentUserUuid(): UUID? =
+            securityIdentity.getAttribute<UUID>(UserProvisioningAugmentor.USER_ID_ATTRIBUTE)
     }
-}

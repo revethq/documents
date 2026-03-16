@@ -8,6 +8,10 @@ plugins {
 dependencies {
     implementation(project(":core"))
 
+    // Revet Core (persistence layer: entities, repos, mappers)
+    implementation(libs.revet.core.core)
+    implementation(libs.revet.core.persistence)
+
     implementation(enforcedPlatform(libs.quarkus.bom))
     implementation(libs.quarkus.kotlin)
     implementation(libs.kotlin.stdlib)
@@ -22,11 +26,22 @@ dependencies {
     implementation(libs.revet.iam.permission.persistence)
     implementation(libs.revet.iam.permission.web)
 
+    // Revet Capabilities (capability provider, tenant capability store)
+    implementation(libs.revet.capabilities.core)
+    implementation(libs.revet.capabilities.persistence)
+
     // Revet Buckets (for DocumentStorageService, PrebuiltPolicies)
     implementation(libs.revet.buckets.core)
     implementation(libs.revet.buckets.persistence)
     implementation(libs.revet.buckets.provider.s3)
     implementation(libs.revet.buckets.provider.gcs)
+
+    testImplementation(kotlin("test"))
+    testImplementation(libs.mockk)
+}
+
+tasks.withType<Test> {
+    useJUnitPlatform()
 }
 
 allOpen {

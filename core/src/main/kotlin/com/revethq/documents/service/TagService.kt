@@ -1,21 +1,28 @@
 package com.revethq.documents.service
 
-import com.revethq.documents.domain.Tag
+import com.revethq.core.Tag
 
 /**
  * Service interface for Tag business logic.
  */
 interface TagService {
-    fun getAllTags(): List<Tag>
+    fun getAllTags(organizationId: Long): List<Tag>
 
     fun getTagById(id: Int): Tag?
 
-    fun getTagByName(name: String): Tag?
+    fun getTagByName(
+        name: String,
+        organizationId: Long,
+    ): Tag?
 
-    fun getTagBySlug(slug: String): Tag?
+    fun getTagBySlug(
+        slug: String,
+        organizationId: Long,
+    ): Tag?
 
     fun createTag(
         name: String,
+        organizationId: Long,
         slug: String? = null,
     ): Tag
 
@@ -27,17 +34,20 @@ interface TagService {
 
     fun deleteTag(id: Int): Boolean
 
-    fun getTagsForDocument(documentId: Long): List<Tag>
+    fun getTagsForResource(resourceUrn: String): List<Tag>
 
-    fun addTagToDocument(
+    fun addTagToResource(
         tagId: Int,
-        documentId: Long,
+        resourceUrn: String,
     ): Boolean
 
-    fun removeTagFromDocument(
+    fun removeTagFromResource(
         tagId: Int,
-        documentId: Long,
+        resourceUrn: String,
     ): Boolean
 
-    fun getOrCreateTag(name: String): Tag
+    fun getOrCreateTag(
+        name: String,
+        organizationId: Long,
+    ): Tag
 }

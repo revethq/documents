@@ -1,10 +1,12 @@
 package com.revethq.documents.api.resource
 
+import com.revethq.core.dto.AddTagRequest
+import com.revethq.core.service.OrganizationService
+import com.revethq.core.service.ProjectService
 import com.revethq.documents.api.mapper.DocumentDTOMapper
 import com.revethq.documents.api.mapper.PageDTOMapper
 import com.revethq.documents.domain.PageRequest
 import com.revethq.documents.domain.Sort
-import com.revethq.documents.dto.AddTagRequest
 import com.revethq.documents.dto.CreateDocumentRequest
 import com.revethq.documents.dto.DocumentDTO
 import com.revethq.documents.dto.PageDTO
@@ -16,8 +18,6 @@ import com.revethq.documents.service.CategoryService
 import com.revethq.documents.service.DocumentService
 import com.revethq.documents.service.DocumentStorageService
 import com.revethq.documents.service.DocumentVersionService
-import com.revethq.documents.service.OrganizationService
-import com.revethq.documents.service.ProjectService
 import com.revethq.documents.service.TagService
 import com.revethq.iam.permission.web.filter.RequiresPermission
 import jakarta.inject.Inject
@@ -55,9 +55,9 @@ class DocumentResource
     constructor(
         private val documentService: com.revethq.documents.service.DocumentService,
         private val documentVersionService: com.revethq.documents.service.DocumentVersionService,
-        private val organizationService: com.revethq.documents.service.OrganizationService,
+        private val organizationService: com.revethq.core.service.OrganizationService,
         private val storageService: com.revethq.documents.service.DocumentStorageService,
-        private val projectService: com.revethq.documents.service.ProjectService,
+        private val projectService: com.revethq.core.service.ProjectService,
         private val categoryService: com.revethq.documents.service.CategoryService,
         private val tagService: com.revethq.documents.service.TagService,
     ) {
@@ -474,7 +474,7 @@ class DocumentResource
             @PathParam("uuid")
             @Parameter(description = "Document UUID")
             uuid: UUID,
-            request: com.revethq.documents.dto.AddTagRequest,
+            request: com.revethq.core.dto.AddTagRequest,
         ): Response {
             return try {
                 val document =

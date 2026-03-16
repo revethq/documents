@@ -8,6 +8,8 @@ import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import java.util.UUID
 import com.revethq.buckets.permission.Actions as BucketActions
+import com.revethq.core.permission.Actions as CoreActions
+import com.revethq.iam.permission.discovery.Actions as IamActions
 
 /**
  * Prebuilt policies for common roles in the Documents service.
@@ -45,6 +47,12 @@ class PrebuiltPolicies {
                         actions = listOf(Actions.ALL_ACTIONS),
                         resources = listOf(urn.wildcardAll()),
                     ),
+                    Statement(
+                        sid = "AllowGroupManagement",
+                        effect = Effect.ALLOW,
+                        actions = IamActions.Group.ALL,
+                        resources = listOf("urn:${urn.namespace}:iam:*:group/*"),
+                    ),
                 ),
         )
 
@@ -73,6 +81,12 @@ class PrebuiltPolicies {
                                 urn.wildcard(tenantId, "*"),
                             ),
                     ),
+                    Statement(
+                        sid = "AllowGroupManagement",
+                        effect = Effect.ALLOW,
+                        actions = IamActions.Group.ALL,
+                        resources = listOf("urn:${urn.namespace}:iam:$tenantId:group/*"),
+                    ),
                 ),
         )
 
@@ -95,7 +109,7 @@ class PrebuiltPolicies {
                     Statement(
                         sid = "AllowOrganizationManagement",
                         effect = Effect.ALLOW,
-                        actions = Actions.Organization.ALL,
+                        actions = CoreActions.Organization.ALL,
                         resources = listOf(urn.organizationWildcard(tenantId)),
                     ),
                 ),
@@ -116,7 +130,7 @@ class PrebuiltPolicies {
                     Statement(
                         sid = "AllowOrganizationRead",
                         effect = Effect.ALLOW,
-                        actions = Actions.Organization.READ_ONLY,
+                        actions = CoreActions.Organization.READ_ONLY,
                         resources = listOf(urn.organizationWildcard(tenantId)),
                     ),
                 ),
@@ -141,7 +155,7 @@ class PrebuiltPolicies {
                     Statement(
                         sid = "AllowProjectManagement",
                         effect = Effect.ALLOW,
-                        actions = Actions.Project.ALL,
+                        actions = CoreActions.Project.ALL,
                         resources = listOf(urn.projectWildcard(tenantId)),
                     ),
                 ),
@@ -162,7 +176,7 @@ class PrebuiltPolicies {
                     Statement(
                         sid = "AllowProjectReadWrite",
                         effect = Effect.ALLOW,
-                        actions = Actions.Project.READ_ONLY + Actions.Project.WRITE,
+                        actions = CoreActions.Project.READ_ONLY + CoreActions.Project.WRITE,
                         resources = listOf(urn.projectWildcard(tenantId)),
                     ),
                 ),
@@ -183,7 +197,7 @@ class PrebuiltPolicies {
                     Statement(
                         sid = "AllowProjectRead",
                         effect = Effect.ALLOW,
-                        actions = Actions.Project.READ_ONLY,
+                        actions = CoreActions.Project.READ_ONLY,
                         resources = listOf(urn.projectWildcard(tenantId)),
                     ),
                 ),
@@ -461,13 +475,13 @@ class PrebuiltPolicies {
                     Statement(
                         sid = "AllowOrganizationRead",
                         effect = Effect.ALLOW,
-                        actions = Actions.Organization.READ_ONLY,
+                        actions = CoreActions.Organization.READ_ONLY,
                         resources = listOf(urn.organizationWildcard(tenantId)),
                     ),
                     Statement(
                         sid = "AllowProjectRead",
                         effect = Effect.ALLOW,
-                        actions = Actions.Project.READ_ONLY,
+                        actions = CoreActions.Project.READ_ONLY,
                         resources = listOf(urn.projectWildcard(tenantId)),
                     ),
                     Statement(
@@ -523,8 +537,8 @@ class PrebuiltPolicies {
                         sid = "AllowAllReadOperations",
                         effect = Effect.ALLOW,
                         actions =
-                            Actions.Organization.READ_ONLY +
-                                Actions.Project.READ_ONLY +
+                            CoreActions.Organization.READ_ONLY +
+                                CoreActions.Project.READ_ONLY +
                                 Actions.Document.READ_ONLY +
                                 Actions.DocumentVersion.READ_ONLY +
                                 Actions.Category.READ_ONLY +
@@ -571,7 +585,7 @@ class PrebuiltPolicies {
                     Statement(
                         sid = "AllowOrganizationAdmin",
                         effect = Effect.ALLOW,
-                        actions = Actions.Organization.ALL,
+                        actions = CoreActions.Organization.ALL,
                         resources = listOf(urn.organization(tenantId, organizationUuid)),
                     ),
                 ),
@@ -595,7 +609,7 @@ class PrebuiltPolicies {
                     Statement(
                         sid = "AllowOrganizationManagement",
                         effect = Effect.ALLOW,
-                        actions = Actions.Organization.ALL.filter { it != Actions.Organization.DELETE },
+                        actions = CoreActions.Organization.ALL.filter { it != CoreActions.Organization.DELETE },
                         resources = listOf(urn.organization(tenantId, organizationUuid)),
                     ),
                 ),
@@ -619,7 +633,7 @@ class PrebuiltPolicies {
                     Statement(
                         sid = "AllowOrganizationRead",
                         effect = Effect.ALLOW,
-                        actions = Actions.Organization.READ_ONLY,
+                        actions = CoreActions.Organization.READ_ONLY,
                         resources = listOf(urn.organization(tenantId, organizationUuid)),
                     ),
                 ),
@@ -647,7 +661,7 @@ class PrebuiltPolicies {
                     Statement(
                         sid = "AllowProjectAdmin",
                         effect = Effect.ALLOW,
-                        actions = Actions.Project.ALL,
+                        actions = CoreActions.Project.ALL,
                         resources = listOf(urn.project(tenantId, projectUuid)),
                     ),
                 ),
@@ -671,7 +685,7 @@ class PrebuiltPolicies {
                     Statement(
                         sid = "AllowProjectManagement",
                         effect = Effect.ALLOW,
-                        actions = Actions.Project.ALL.filter { it != Actions.Project.DELETE },
+                        actions = CoreActions.Project.ALL.filter { it != CoreActions.Project.DELETE },
                         resources = listOf(urn.project(tenantId, projectUuid)),
                     ),
                 ),
@@ -695,7 +709,7 @@ class PrebuiltPolicies {
                     Statement(
                         sid = "AllowProjectReadWrite",
                         effect = Effect.ALLOW,
-                        actions = Actions.Project.READ_ONLY + Actions.Project.WRITE,
+                        actions = CoreActions.Project.READ_ONLY + CoreActions.Project.WRITE,
                         resources = listOf(urn.project(tenantId, projectUuid)),
                     ),
                 ),
@@ -719,7 +733,7 @@ class PrebuiltPolicies {
                     Statement(
                         sid = "AllowProjectRead",
                         effect = Effect.ALLOW,
-                        actions = Actions.Project.READ_ONLY,
+                        actions = CoreActions.Project.READ_ONLY,
                         resources = listOf(urn.project(tenantId, projectUuid)),
                     ),
                 ),
@@ -746,8 +760,8 @@ class PrebuiltPolicies {
                         effect = Effect.DENY,
                         actions =
                             listOf(
-                                Actions.Organization.DELETE,
-                                Actions.Project.DELETE,
+                                CoreActions.Organization.DELETE,
+                                CoreActions.Project.DELETE,
                                 Actions.Document.DELETE,
                                 Actions.DocumentVersion.DELETE,
                                 Actions.Category.DELETE,

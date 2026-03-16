@@ -5,7 +5,8 @@ plugins {
 }
 
 dependencies {
-    api(libs.revet.core)
+    api(libs.revet.core.core)
+    api(libs.revet.capabilities.core)
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {

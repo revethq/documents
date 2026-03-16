@@ -3,9 +3,10 @@ quarkus = "3.31.1"
 kotlin = "2.3.10"
 ktlint = "14.0.1"
 mockk = "1.14.9"
-revet-core = "0.1.0"
-revet-iam = "0.1.16"
-revet-buckets = "0.1.1"
+revet-core = "0.2.5"
+revet-iam = "0.1.20"
+revet-buckets = "0.1.2"
+revet-capabilities = "0.1.0"
 google-cloud-storage = "2.20.1"
 
 [libraries]
@@ -26,7 +27,9 @@ quarkus-amazon-s3 = { module = "io.quarkiverse.amazonservices:quarkus-amazon-s3"
 aws-url-connection-client = { module = "software.amazon.awssdk:url-connection-client" }
 google-cloud-storage = { module = "io.quarkiverse.googlecloudservices:quarkus-google-cloud-storage", version.ref = "google-cloud-storage" }
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8" }
-revet-core = { module = "com.revethq:revet-core", version.ref = "revet-core" }
+revet-core-core = { module = "com.revethq.core:revet-core-core", version.ref = "revet-core" }
+revet-core-persistence = { module = "com.revethq.core:revet-core-persistence-runtime", version.ref = "revet-core" }
+revet-core-web = { module = "com.revethq.core:revet-core-web", version.ref = "revet-core" }
 revet-iam-user = { module = "com.revethq.iam:revet-user", version.ref = "revet-iam" }
 revet-iam-user-persistence = { module = "com.revethq.iam:revet-user-persistence-runtime", version.ref = "revet-iam" }
 revet-iam-user-web = { module = "com.revethq.iam:revet-user-web", version.ref = "revet-iam" }
@@ -39,6 +42,9 @@ revet-buckets-web = { module = "com.revethq.buckets:revet-buckets-web", version.
 revet-buckets-persistence = { module = "com.revethq.buckets:revet-buckets-persistence-runtime", version.ref = "revet-buckets" }
 revet-buckets-provider-s3 = { module = "com.revethq.buckets:revet-buckets-provider-s3", version.ref = "revet-buckets" }
 revet-buckets-provider-gcs = { module = "com.revethq.buckets:revet-buckets-provider-gcs", version.ref = "revet-buckets" }
+revet-capabilities-core = { module = "com.revethq.capabilities:revet-capabilities-core", version.ref = "revet-capabilities" }
+revet-capabilities-persistence = { module = "com.revethq.capabilities:revet-capabilities-persistence-runtime", version.ref = "revet-capabilities" }
+revet-capabilities-web = { module = "com.revethq.capabilities:revet-capabilities-web", version.ref = "revet-capabilities" }
 quarkus-junit5 = { module = "io.quarkus:quarkus-junit5" }
 quarkus-junit5-mockito = { module = "io.quarkus:quarkus-junit5-mockito" }
 rest-assured = { module = "io.rest-assured:rest-assured" }

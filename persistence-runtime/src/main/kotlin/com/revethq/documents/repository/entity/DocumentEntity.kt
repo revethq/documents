@@ -27,7 +27,7 @@ class DocumentEntity : PanacheEntity() {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id", nullable = false)
-    var project: com.revethq.documents.repository.entity.ProjectEntity? = null
+    var project: com.revethq.core.repository.entity.ProjectEntity? = null
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")

@@ -1,4 +1,4 @@
-package com.revethq.documents.security
+package com.revethq.documents.service
 
 import java.util.UUID
 

@@ -1,8 +1,8 @@
 package com.revethq.documents.service
 
+import com.revethq.core.Organization
+import com.revethq.core.Project
 import com.revethq.documents.domain.Document
-import com.revethq.documents.domain.Organization
-import com.revethq.documents.domain.Project
 
 /**
  * Service for full-text search operations.

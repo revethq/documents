@@ -1,15 +1,17 @@
 package com.revethq.documents.repository
 
+import com.revethq.core.repository.entity.ProjectEntity
+import com.revethq.core.repository.entity.TaggedItemEntity
 import com.revethq.documents.domain.Document
 import com.revethq.documents.domain.Page
 import com.revethq.documents.domain.PageRequest
 import com.revethq.documents.domain.Sort
 import com.revethq.documents.repository.entity.CategoryEntity
 import com.revethq.documents.repository.entity.DocumentEntity
-import com.revethq.documents.repository.entity.ProjectEntity
-import com.revethq.documents.repository.entity.TaggedItemEntity
 import com.revethq.documents.repository.mapper.DocumentMapper
 import jakarta.enterprise.context.ApplicationScoped
+import jakarta.inject.Inject
+import jakarta.persistence.EntityManager
 import jakarta.transaction.Transactional
 import java.time.LocalDateTime
 import java.util.UUID
@@ -20,18 +22,21 @@ import io.quarkus.panache.common.Sort as PanacheSort
  */
 @ApplicationScoped
 class DocumentRepositoryImpl : DocumentRepository {
-    private fun fetchTagsForDocument(documentId: Long): Set<String> {
-        val taggedItems =
-            TaggedItemEntity.list(
-                "contentTypeId = ?1 and objectId = ?2",
-                TaggedItemEntity.DOCUMENT_CONTENT_TYPE_ID,
-                documentId.toInt(),
-            )
+    companion object {
+        const val DOCUMENT_URN_PREFIX = "urn:revet:documents::document/"
+    }
+
+    @Inject
+    lateinit var entityManager: EntityManager
+
+    private fun fetchTagsForDocument(documentUuid: UUID): Set<String> {
+        val urn = "$DOCUMENT_URN_PREFIX$documentUuid"
+        val taggedItems = TaggedItemEntity.list("resourceUrn = ?1", urn)
         return taggedItems.mapNotNull { it.tag?.name }.toSet()
     }
 
     private fun entityToDomain(entity: DocumentEntity): Document {
-        val tags = entity.id?.let { fetchTagsForDocument(it) } ?: emptySet()
+        val tags = fetchTagsForDocument(entity.uuid)
         return DocumentMapper.toDomain(entity, tags)
     }
 
@@ -315,34 +320,29 @@ class DocumentRepositoryImpl : DocumentRepository {
         return Page.fromOverfetch(documents, pageRequest.page, pageRequest.size)
     }
 
+    @Suppress("UNCHECKED_CAST")
     private fun findDocumentIdsWithAllTags(tagIds: List<Int>): Set<Long> {
-        // For each tag, find document IDs that have it, then intersect
-        val tagIdsList = tagIds.toList()
-        var result: Set<Long>? = null
+        if (tagIds.isEmpty()) return emptySet()
 
-        for (tagId in tagIdsList) {
-            val taggedItems =
-                TaggedItemEntity.list(
-                    "contentTypeId = ?1 and tag.id = ?2",
-                    TaggedItemEntity.DOCUMENT_CONTENT_TYPE_ID,
-                    tagId,
-                )
-            val docIds = taggedItems.map { it.objectId.toLong() }.toSet()
+        // Use native SQL to efficiently find documents that have ALL specified tags
+        val sql =
+            """
+            SELECT d.id FROM revet_documents d
+            WHERE (
+                SELECT COUNT(DISTINCT ti.tag_id) FROM revet_tagged_items ti
+                WHERE ti.resource_urn = '$DOCUMENT_URN_PREFIX' || CAST(d.uuid AS TEXT)
+                AND ti.tag_id IN (:tagIds)
+            ) = :tagCount
+            """.trimIndent()
 
-            result =
-                if (result == null) {
-                    docIds
-                } else {
-                    result.intersect(docIds)
-                }
+        val results =
+            entityManager
+                .createNativeQuery(sql)
+                .setParameter("tagIds", tagIds)
+                .setParameter("tagCount", tagIds.size.toLong())
+                .resultList as List<Number>
 
-            // Early exit if no documents match
-            if (result.isEmpty()) {
-                return emptySet()
-            }
-        }
-
-        return result ?: emptySet()
+        return results.map { it.toLong() }.toSet()
     }
 
     private fun findByDocumentIds(

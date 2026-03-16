@@ -1,11 +1,13 @@
 package com.revethq.documents.service
 
+import com.revethq.core.Tag
+import com.revethq.core.repository.ProjectRepository
+import com.revethq.core.repository.TagRepository
+import com.revethq.core.repository.TaggedItemRepository
 import com.revethq.documents.domain.Document
 import com.revethq.documents.domain.Page
 import com.revethq.documents.domain.PageRequest
-import com.revethq.documents.domain.Tag
 import com.revethq.documents.repository.DocumentRepository
-import com.revethq.documents.repository.TagRepository
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
@@ -20,7 +22,20 @@ class DocumentServiceImpl
     constructor(
         private val documentRepository: DocumentRepository,
         private val tagRepository: TagRepository,
+        private val taggedItemRepository: TaggedItemRepository,
+        private val projectRepository: ProjectRepository,
     ) : DocumentService {
+        companion object {
+            fun documentUrn(uuid: UUID): String = "urn:revet:documents::document/$uuid"
+        }
+
+        private fun resolveOrganizationId(projectId: Long): Long {
+            val project =
+                projectRepository.findById(projectId)
+                    ?: throw IllegalArgumentException("Project with id $projectId not found")
+            return project.organizationId
+        }
+
         override fun getAllDocuments(includeInactive: Boolean): List<Document> = documentRepository.findAll(includeInactive)
 
         override fun getDocumentById(id: Long): Document? = documentRepository.findById(id)
@@ -57,21 +72,18 @@ class DocumentServiceImpl
                 )
 
             val saved = documentRepository.save(document)
+            val organizationId = resolveOrganizationId(projectId)
+            val urn = documentUrn(saved.uuid)
 
-            // Add tags via taggit tables
+            // Add tags via revet_tagged_items
             tags.forEach { tagName ->
-                // Generate slug to look up by unique constraint
                 val slug = tagName.lowercase().replace(Regex("[^a-z0-9]+"), "-").trim('-')
                 val tag =
-                    tagRepository.findBySlug(slug)
-                        ?: tagRepository.save(
-                            Tag
-                                .create(tagName, slug),
-                        )
-                tagRepository.addTagToDocument(tag.id!!, saved.id!!)
+                    tagRepository.findBySlug(slug, organizationId)
+                        ?: tagRepository.save(Tag.create(tagName, organizationId, slug))
+                taggedItemRepository.addTagToResource(tag.id!!, urn)
             }
 
-            // Return document with tags
             return saved
         }
 
@@ -101,24 +113,23 @@ class DocumentServiceImpl
 
             // Sync tags if provided
             if (tags != null) {
-                val currentTags = tagRepository.findTagsByDocumentId(id)
+                val urn = documentUrn(existing.uuid)
+                val organizationId = resolveOrganizationId(existing.projectId)
+                val currentTags = taggedItemRepository.findTagsByResource(urn)
                 val currentTagNames = currentTags.map { it.name }.toSet()
 
                 // Remove tags that are no longer in the list
                 currentTags.filter { it.name !in tags }.forEach { tag ->
-                    tagRepository.removeTagFromDocument(tag.id!!, id)
+                    taggedItemRepository.removeTagFromResource(tag.id!!, urn)
                 }
 
                 // Add new tags
                 tags.filter { it !in currentTagNames }.forEach { tagName ->
                     val slug = tagName.lowercase().replace(Regex("[^a-z0-9]+"), "-").trim('-')
                     val tag =
-                        tagRepository.findBySlug(slug)
-                            ?: tagRepository.save(
-                                Tag
-                                    .create(tagName, slug),
-                            )
-                    tagRepository.addTagToDocument(tag.id!!, id)
+                        tagRepository.findBySlug(slug, organizationId)
+                            ?: tagRepository.save(Tag.create(tagName, organizationId, slug))
+                    taggedItemRepository.addTagToResource(tag.id!!, urn)
                 }
             }
 
@@ -134,14 +145,12 @@ class DocumentServiceImpl
             require(tag.isNotBlank()) { "Tag cannot be blank" }
             val document = documentRepository.findById(documentId) ?: return null
 
+            val organizationId = resolveOrganizationId(document.projectId)
             val slug = tag.lowercase().replace(Regex("[^a-z0-9]+"), "-").trim('-')
             val tagEntity =
-                tagRepository.findBySlug(slug)
-                    ?: tagRepository.save(
-                        Tag
-                            .create(tag, slug),
-                    )
-            tagRepository.addTagToDocument(tagEntity.id!!, documentId)
+                tagRepository.findBySlug(slug, organizationId)
+                    ?: tagRepository.save(Tag.create(tag, organizationId, slug))
+            taggedItemRepository.addTagToResource(tagEntity.id!!, documentUrn(document.uuid))
 
             return documentRepository.findById(documentId)
         }
@@ -153,8 +162,9 @@ class DocumentServiceImpl
         ): Document? {
             val document = documentRepository.findById(documentId) ?: return null
 
-            val tagEntity = tagRepository.findByName(tag) ?: return document
-            tagRepository.removeTagFromDocument(tagEntity.id!!, documentId)
+            val organizationId = resolveOrganizationId(document.projectId)
+            val tagEntity = tagRepository.findByName(tag, organizationId) ?: return document
+            taggedItemRepository.removeTagFromResource(tagEntity.id!!, documentUrn(document.uuid))
 
             return documentRepository.findById(documentId)
         }

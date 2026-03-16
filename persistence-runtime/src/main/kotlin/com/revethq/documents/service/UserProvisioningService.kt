@@ -12,16 +12,18 @@ import com.revethq.iam.user.persistence.service.UserService
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
+import org.eclipse.microprofile.config.inject.ConfigProperty
 import org.jboss.logging.Logger
 import java.time.OffsetDateTime
+import java.util.Optional
 import java.util.UUID
-import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * Service for provisioning users on first authentication.
+ * Service for provisioning users on authentication.
  *
- * When a user authenticates and no users exist in the system,
- * this service creates the user as an admin with full access.
+ * When revet.auth.user.provision=auto, any user with a valid JWT is automatically
+ * created. The first user in the system is granted admin access; subsequent users
+ * are created with no permissions.
  */
 @ApplicationScoped
 class UserProvisioningService
@@ -33,94 +35,83 @@ class UserProvisioningService
         private val policyAttachmentService: PolicyAttachmentService,
         private val prebuiltPolicies: PrebuiltPolicies,
         private val urn: DocumentsUrn,
+        @ConfigProperty(name = "revet.auth.user.provision")
+        private val provisionMode: Optional<String>,
     ) {
         private val log = Logger.getLogger(UserProvisioningService::class.java)
-        private val provisioningInProgress = AtomicBoolean(false)
-        private val provisioningComplete = AtomicBoolean(false)
+
+        private val autoProvision: Boolean
+            get() = provisionMode.orElse("").equals("auto", ignoreCase = true)
 
         /**
          * Provisions a user if they don't exist.
-         * If this is the first user in the system, they are granted admin access.
          *
-         * @param userUuid The user's UUID from the JWT
+         * When auto-provisioning is enabled, any authenticated user is created on first login.
+         * The first user in the system is granted admin access; subsequent users get no permissions.
+         *
+         * @param externalId The external ID from the identity provider (JWT sub claim)
          * @param username The user's username (from JWT claims)
          * @param email The user's email (from JWT claims)
-         * @param externalId The external ID from the identity provider
          * @param tenantId The tenant ID (may be null)
          * @param issuer The JWT issuer (used as IdentityProvider externalId)
          * @return The provisioned or existing user, or null if provisioning is not needed
          */
         @Transactional
         fun provisionUserIfNeeded(
-            userUuid: UUID,
+            externalId: String,
             username: String?,
             email: String?,
-            externalId: String,
             tenantId: String?,
             issuer: String?,
         ): User? {
-            // Fast path: if provisioning already complete, just check for existing user
-            if (provisioningComplete.get()) {
-                return userService.findById(userUuid)
-            }
+            val identityProvider = findOrCreateIdentityProvider(issuer)
 
-            // Check if user already exists
-            val existingUser = userService.findById(userUuid)
+            // Check if user already exists by external ID
+            val existingUser = userService.findByExternalId(externalId, identityProvider.id)
             if (existingUser != null) {
-                provisioningComplete.set(true)
                 return existingUser
             }
 
-            // Try to acquire provisioning lock - if another thread is already provisioning, skip
-            if (!provisioningInProgress.compareAndSet(false, true)) {
+            // User doesn't exist — check if we should create them
+            val isFirstUser = userService.count() == 0L
+
+            if (!isFirstUser && !autoProvision) {
                 return null
             }
-
-            // Double-check user doesn't exist
-            val existingAfterLock = userService.findById(userUuid)
-            if (existingAfterLock != null) {
-                provisioningComplete.set(true)
-                return existingAfterLock
-            }
-
-            // Check if this is the first user
-            val userCount = userService.count()
-            if (userCount > 0) {
-                provisioningComplete.set(true)
-                return null
-            }
-
-            // This is the first user - create them as admin
-            val identityProvider = findOrCreateDefaultIdentityProvider(issuer)
 
             val user =
                 User(
-                    id = userUuid,
-                    username = username ?: "admin",
-                    email = email ?: "admin@localhost",
+                    id = UUID.randomUUID(),
+                    username = username ?: externalId,
+                    email = email ?: "",
                     metadata = Metadata(),
                     createdOn = null,
                     updatedOn = null,
                 )
             val createdUser = userService.create(user, identityProvider.id, externalId)
 
-            attachGlobalAdminPolicy(createdUser, tenantId)
+            if (isFirstUser) {
+                attachGlobalAdminPolicy(createdUser, tenantId)
+                log.info("Provisioned first user as admin: ${createdUser.id} (${createdUser.username})")
+            } else {
+                log.info("Auto-provisioned user: ${createdUser.id} (${createdUser.username})")
+            }
 
-            log.info("Provisioned first user as admin: ${createdUser.id} (${createdUser.username})")
-            provisioningComplete.set(true)
             return createdUser
         }
 
-        private fun findOrCreateDefaultIdentityProvider(issuer: String?): IdentityProviderEntity {
-            val existing = identityProviderRepository.findAll().firstResult()
-            if (existing != null) {
-                return existing
+        private fun findOrCreateIdentityProvider(issuer: String?): IdentityProviderEntity {
+            if (issuer != null) {
+                val byIssuer = identityProviderRepository.findByExternalId(issuer)
+                if (byIssuer != null) {
+                    return byIssuer
+                }
             }
 
             val idp =
                 IdentityProviderEntity().apply {
                     id = UUID.randomUUID()
-                    name = "default"
+                    name = issuer?.substringAfterLast("/")?.ifBlank { "default" } ?: "default"
                     externalId = issuer
                     createdOn = OffsetDateTime.now()
                     updatedOn = OffsetDateTime.now()
@@ -133,7 +124,6 @@ class UserProvisioningService
             user: User,
             tenantId: String?,
         ) {
-            // Use empty tenant ID since app is not multi-tenant
             val effectiveTenantId = ""
             val adminPolicy = prebuiltPolicies.globalAdminPolicy()
             val savedPolicy = policyService.create(adminPolicy)

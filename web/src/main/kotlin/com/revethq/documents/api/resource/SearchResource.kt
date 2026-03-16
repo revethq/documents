@@ -1,11 +1,11 @@
 package com.revethq.documents.api.resource
 
+import com.revethq.core.api.mapper.OrganizationDTOMapper
+import com.revethq.core.api.mapper.ProjectDTOMapper
+import com.revethq.core.dto.OrganizationDTO
+import com.revethq.core.dto.ProjectDTO
 import com.revethq.documents.api.mapper.DocumentDTOMapper
-import com.revethq.documents.api.mapper.OrganizationDTOMapper
-import com.revethq.documents.api.mapper.ProjectDTOMapper
 import com.revethq.documents.dto.DocumentDTO
-import com.revethq.documents.dto.OrganizationDTO
-import com.revethq.documents.dto.ProjectDTO
 import com.revethq.documents.dto.SearchResultsDTO
 import com.revethq.documents.permission.Actions
 import com.revethq.documents.service.SearchService
@@ -81,13 +81,13 @@ class SearchResource
                     },
                 projects =
                     results.projects.map {
-                        com.revethq.documents.api.mapper.ProjectDTOMapper.toDTO(
+                        com.revethq.core.api.mapper.ProjectDTOMapper.toDTO(
                             it,
                         )
                     },
                 organizations =
                     results.organizations.map {
-                        com.revethq.documents.api.mapper.OrganizationDTOMapper.toDTO(
+                        com.revethq.core.api.mapper.OrganizationDTOMapper.toDTO(
                             it,
                         )
                     },
@@ -148,7 +148,7 @@ class SearchResource
                 content = [
                     Content(
                         mediaType = MediaType.APPLICATION_JSON,
-                        schema = Schema(implementation = com.revethq.documents.dto.ProjectDTO::class),
+                        schema = Schema(implementation = com.revethq.core.dto.ProjectDTO::class),
                     ),
                 ],
             ),
@@ -162,14 +162,14 @@ class SearchResource
             @QueryParam("maxResults")
             @Parameter(description = "Maximum number of results (default: 50)")
             maxResults: Int? = 50,
-        ): List<com.revethq.documents.dto.ProjectDTO> {
+        ): List<com.revethq.core.dto.ProjectDTO> {
             if (query.isNullOrBlank()) {
                 throw BadRequestException("Query parameter 'q' is required")
             }
 
             val projects = searchService.searchProjects(query, maxResults ?: 50)
             return projects.map {
-                com.revethq.documents.api.mapper.ProjectDTOMapper
+                com.revethq.core.api.mapper.ProjectDTOMapper
                     .toDTO(it)
             }
         }
@@ -188,7 +188,7 @@ class SearchResource
                 content = [
                     Content(
                         mediaType = MediaType.APPLICATION_JSON,
-                        schema = Schema(implementation = com.revethq.documents.dto.OrganizationDTO::class),
+                        schema = Schema(implementation = com.revethq.core.dto.OrganizationDTO::class),
                     ),
                 ],
             ),
@@ -202,14 +202,14 @@ class SearchResource
             @QueryParam("maxResults")
             @Parameter(description = "Maximum number of results (default: 50)")
             maxResults: Int? = 50,
-        ): List<com.revethq.documents.dto.OrganizationDTO> {
+        ): List<com.revethq.core.dto.OrganizationDTO> {
             if (query.isNullOrBlank()) {
                 throw BadRequestException("Query parameter 'q' is required")
             }
 
             val organizations = searchService.searchOrganizations(query, maxResults ?: 50)
             return organizations.map {
-                com.revethq.documents.api.mapper.OrganizationDTOMapper
+                com.revethq.core.api.mapper.OrganizationDTOMapper
                     .toDTO(it)
             }
         }

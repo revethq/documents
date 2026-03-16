@@ -1,7 +1,8 @@
 package com.revethq.documents.service
 
-import com.revethq.documents.domain.Tag
-import com.revethq.documents.repository.TagRepository
+import com.revethq.core.Tag
+import com.revethq.core.repository.TagRepository
+import com.revethq.core.repository.TaggedItemRepository
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 
@@ -13,31 +14,39 @@ class TagServiceImpl
     @Inject
     constructor(
         private val tagRepository: TagRepository,
+        private val taggedItemRepository: TaggedItemRepository,
     ) : TagService {
-        override fun getAllTags(): List<Tag> = tagRepository.findAll()
+        override fun getAllTags(organizationId: Long): List<Tag> = tagRepository.findAllByOrganizationId(organizationId)
 
         override fun getTagById(id: Int): Tag? = tagRepository.findById(id)
 
-        override fun getTagByName(name: String): Tag? = tagRepository.findByName(name)
+        override fun getTagByName(
+            name: String,
+            organizationId: Long,
+        ): Tag? = tagRepository.findByName(name, organizationId)
 
-        override fun getTagBySlug(slug: String): Tag? = tagRepository.findBySlug(slug)
+        override fun getTagBySlug(
+            slug: String,
+            organizationId: Long,
+        ): Tag? = tagRepository.findBySlug(slug, organizationId)
 
         override fun createTag(
             name: String,
+            organizationId: Long,
             slug: String?,
         ): Tag {
             require(name.isNotBlank()) { "Tag name cannot be blank" }
             require(name.length <= 100) { "Tag name cannot exceed 100 characters" }
 
             // Check for duplicate name
-            tagRepository.findByName(name)?.let {
+            tagRepository.findByName(name, organizationId)?.let {
                 throw IllegalArgumentException("Tag with name '$name' already exists")
             }
 
-            val tag = Tag.create(name, slug)
+            val tag = Tag.create(name, organizationId, slug)
 
             // Check for duplicate slug
-            tagRepository.findBySlug(tag.slug)?.let {
+            tagRepository.findBySlug(tag.slug, organizationId)?.let {
                 throw IllegalArgumentException("Tag with slug '${tag.slug}' already exists")
             }
 
@@ -56,7 +65,7 @@ class TagServiceImpl
                 require(it.length <= 100) { "Tag name cannot exceed 100 characters" }
 
                 // Check for duplicate name (excluding current tag)
-                tagRepository.findByName(it)?.let { found ->
+                tagRepository.findByName(it, existing.organizationId)?.let { found ->
                     if (found.id != id) {
                         throw IllegalArgumentException("Tag with name '$it' already exists")
                     }
@@ -65,7 +74,7 @@ class TagServiceImpl
 
             slug?.let {
                 // Check for duplicate slug (excluding current tag)
-                tagRepository.findBySlug(it)?.let { found ->
+                tagRepository.findBySlug(it, existing.organizationId)?.let { found ->
                     if (found.id != id) {
                         throw IllegalArgumentException("Tag with slug '$it' already exists")
                     }
@@ -76,23 +85,29 @@ class TagServiceImpl
             return tagRepository.save(updated)
         }
 
-        override fun deleteTag(id: Int): Boolean = tagRepository.delete(id)
+        override fun deleteTag(id: Int): Boolean {
+            taggedItemRepository.deleteByTagId(id)
+            return tagRepository.delete(id)
+        }
 
-        override fun getTagsForDocument(documentId: Long): List<Tag> = tagRepository.findTagsByDocumentId(documentId)
+        override fun getTagsForResource(resourceUrn: String): List<Tag> = taggedItemRepository.findTagsByResource(resourceUrn)
 
-        override fun addTagToDocument(
+        override fun addTagToResource(
             tagId: Int,
-            documentId: Long,
+            resourceUrn: String,
         ): Boolean {
-            val tag = tagRepository.findById(tagId) ?: return false
-            tagRepository.addTagToDocument(tagId, documentId)
+            tagRepository.findById(tagId) ?: return false
+            taggedItemRepository.addTagToResource(tagId, resourceUrn)
             return true
         }
 
-        override fun removeTagFromDocument(
+        override fun removeTagFromResource(
             tagId: Int,
-            documentId: Long,
-        ): Boolean = tagRepository.removeTagFromDocument(tagId, documentId)
+            resourceUrn: String,
+        ): Boolean = taggedItemRepository.removeTagFromResource(tagId, resourceUrn)
 
-        override fun getOrCreateTag(name: String): Tag = tagRepository.findByName(name) ?: createTag(name)
+        override fun getOrCreateTag(
+            name: String,
+            organizationId: Long,
+        ): Tag = tagRepository.findByName(name, organizationId) ?: createTag(name, organizationId)
     }

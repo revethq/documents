@@ -10,41 +10,6 @@ object Actions {
     const val SERVICE = "documents"
 
     // ============================================================
-    // Organization Actions
-    // ============================================================
-    object Organization {
-        const val LIST = "$SERVICE:ListOrganizations"
-        const val GET = "$SERVICE:GetOrganization"
-        const val CREATE = "$SERVICE:CreateOrganization"
-        const val UPDATE = "$SERVICE:UpdateOrganization"
-        const val DELETE = "$SERVICE:DeleteOrganization"
-
-        val ALL = listOf(LIST, GET, CREATE, UPDATE, DELETE)
-        val READ_ONLY = listOf(LIST, GET)
-        val WRITE = listOf(CREATE, UPDATE)
-    }
-
-    // ============================================================
-    // Project Actions
-    // ============================================================
-    object Project {
-        const val LIST = "$SERVICE:ListProjects"
-        const val GET = "$SERVICE:GetProject"
-        const val CREATE = "$SERVICE:CreateProject"
-        const val UPDATE = "$SERVICE:UpdateProject"
-        const val DELETE = "$SERVICE:DeleteProject"
-        const val ADD_CLIENT = "$SERVICE:AddProjectClient"
-        const val REMOVE_CLIENT = "$SERVICE:RemoveProjectClient"
-        const val ADD_TAG = "$SERVICE:AddProjectTag"
-        const val REMOVE_TAG = "$SERVICE:RemoveProjectTag"
-
-        val ALL = listOf(LIST, GET, CREATE, UPDATE, DELETE, ADD_CLIENT, REMOVE_CLIENT, ADD_TAG, REMOVE_TAG)
-        val READ_ONLY = listOf(LIST, GET)
-        val WRITE = listOf(CREATE, UPDATE, ADD_TAG, REMOVE_TAG)
-        val MANAGE_CLIENTS = listOf(ADD_CLIENT, REMOVE_CLIENT)
-    }
-
-    // ============================================================
     // Document Actions
     // ============================================================
     object Document {

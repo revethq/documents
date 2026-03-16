@@ -1,14 +1,14 @@
 package com.revethq.documents.service
 
+import com.revethq.core.Organization
+import com.revethq.core.Project
+import com.revethq.core.repository.entity.OrganizationEntity
+import com.revethq.core.repository.entity.ProjectEntity
+import com.revethq.core.repository.mapper.OrganizationMapper
+import com.revethq.core.repository.mapper.ProjectMapper
 import com.revethq.documents.domain.Document
-import com.revethq.documents.domain.Organization
-import com.revethq.documents.domain.Project
 import com.revethq.documents.repository.entity.DocumentEntity
-import com.revethq.documents.repository.entity.OrganizationEntity
-import com.revethq.documents.repository.entity.ProjectEntity
 import com.revethq.documents.repository.mapper.DocumentMapper
-import com.revethq.documents.repository.mapper.OrganizationMapper
-import com.revethq.documents.repository.mapper.ProjectMapper
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.persistence.EntityManager

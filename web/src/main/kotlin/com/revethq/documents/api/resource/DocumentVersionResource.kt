@@ -1,5 +1,7 @@
 package com.revethq.documents.api.resource
 
+import com.revethq.core.service.OrganizationService
+import com.revethq.core.service.ProjectService
 import com.revethq.documents.api.mapper.DocumentVersionDTOMapper
 import com.revethq.documents.domain.DocumentVersion
 import com.revethq.documents.domain.UploadStatus
@@ -10,8 +12,6 @@ import com.revethq.documents.permission.Actions
 import com.revethq.documents.service.DocumentService
 import com.revethq.documents.service.DocumentStorageService
 import com.revethq.documents.service.DocumentVersionService
-import com.revethq.documents.service.OrganizationService
-import com.revethq.documents.service.ProjectService
 import com.revethq.iam.permission.web.filter.RequiresPermission
 import jakarta.inject.Inject
 import jakarta.ws.rs.Consumes
@@ -46,8 +46,8 @@ class DocumentVersionResource
     constructor(
         private val documentVersionService: com.revethq.documents.service.DocumentVersionService,
         private val documentService: com.revethq.documents.service.DocumentService,
-        private val projectService: com.revethq.documents.service.ProjectService,
-        private val organizationService: com.revethq.documents.service.OrganizationService,
+        private val projectService: com.revethq.core.service.ProjectService,
+        private val organizationService: com.revethq.core.service.OrganizationService,
         private val storageService: com.revethq.documents.service.DocumentStorageService,
     ) {
         @GET

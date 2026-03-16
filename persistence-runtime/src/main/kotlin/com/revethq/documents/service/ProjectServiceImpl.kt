@@ -1,10 +1,11 @@
 package com.revethq.documents.service
 
-import com.revethq.documents.domain.Project
+import com.revethq.core.Project
+import com.revethq.core.repository.ProjectRepository
+import com.revethq.core.service.ProjectService
 import com.revethq.documents.permission.DocumentsUrn
 import com.revethq.documents.permission.PrebuiltPolicies
-import com.revethq.documents.repository.ProjectRepository
-import com.revethq.documents.security.CurrentUserService
+import com.revethq.documents.service.CurrentUserService
 import com.revethq.iam.permission.persistence.service.PolicyService
 import com.revethq.iam.permission.service.PolicyAttachmentService
 import com.revethq.iam.permission.web.filter.AuthorizationContext

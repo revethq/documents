@@ -1,18 +1,7 @@
 package com.revethq.documents.api.resource
 
-import com.revethq.documents.api.mapper.DocumentVersionDTOMapper
-import com.revethq.documents.dto.CreateDocumentVersionRequest
-import com.revethq.documents.dto.DocumentVersionDTO
-import com.revethq.documents.dto.DownloadResponse
-import com.revethq.documents.dto.InitiateUploadRequest
-import com.revethq.documents.dto.InitiateUploadResponse
 import com.revethq.documents.permission.Actions
 import com.revethq.documents.repository.DocumentVersionRepository
-import com.revethq.documents.service.DocumentService
-import com.revethq.documents.service.DocumentStorageService
-import com.revethq.documents.service.DocumentVersionService
-import com.revethq.documents.service.OrganizationService
-import com.revethq.documents.service.ProjectService
 import com.revethq.iam.permission.web.filter.RequiresPermission
 import jakarta.inject.Inject
 import jakarta.ws.rs.Consumes
@@ -42,11 +31,11 @@ import java.util.UUID
 class FileUploadResource
     @Inject
     constructor(
-        private val documentVersionRepository: com.revethq.documents.repository.DocumentVersionRepository,
+        private val documentVersionRepository: DocumentVersionRepository,
         private val documentVersionService: com.revethq.documents.service.DocumentVersionService,
         private val documentService: com.revethq.documents.service.DocumentService,
-        private val projectService: com.revethq.documents.service.ProjectService,
-        private val organizationService: com.revethq.documents.service.OrganizationService,
+        private val projectService: com.revethq.core.service.ProjectService,
+        private val organizationService: com.revethq.core.service.OrganizationService,
         private val storageService: com.revethq.documents.service.DocumentStorageService,
     ) {
         @GET

@@ -34,7 +34,8 @@ dependencies {
     implementation(libs.quarkus.container.image.docker)
 
     // Revet libraries
-    implementation(libs.revet.core)
+    implementation(libs.revet.core.web)
+    implementation(libs.revet.capabilities.web)
     implementation(libs.revet.iam.user)
     implementation(libs.revet.iam.user.web)
     implementation(libs.revet.iam.permission)

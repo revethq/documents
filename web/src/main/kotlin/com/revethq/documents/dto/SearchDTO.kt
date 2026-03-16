@@ -5,8 +5,8 @@ package com.revethq.documents.dto
  */
 data class SearchResultsDTO(
     val documents: List<com.revethq.documents.dto.DocumentDTO>,
-    val projects: List<com.revethq.documents.dto.ProjectDTO>,
-    val organizations: List<com.revethq.documents.dto.OrganizationDTO>,
+    val projects: List<com.revethq.core.dto.ProjectDTO>,
+    val organizations: List<com.revethq.core.dto.OrganizationDTO>,
 )
 
 data class SearchQueryRequest(

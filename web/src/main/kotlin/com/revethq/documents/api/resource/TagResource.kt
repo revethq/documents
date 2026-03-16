@@ -1,10 +1,10 @@
 package com.revethq.documents.api.resource
 
-import com.revethq.documents.api.mapper.TagDTOMapper
-import com.revethq.documents.dto.CreateTagRequest
+import com.revethq.core.api.mapper.TagDTOMapper
+import com.revethq.core.dto.CreateTagRequest
+import com.revethq.core.dto.TagDTO
+import com.revethq.core.dto.UpdateTagRequest
 import com.revethq.documents.dto.ProblemDetail
-import com.revethq.documents.dto.TagDTO
-import com.revethq.documents.dto.UpdateTagRequest
 import com.revethq.documents.permission.Actions
 import com.revethq.documents.service.TagService
 import com.revethq.iam.permission.web.filter.RequiresPermission
@@ -17,6 +17,7 @@ import jakarta.ws.rs.PUT
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
 import jakarta.ws.rs.Produces
+import jakarta.ws.rs.QueryParam
 import jakarta.ws.rs.core.MediaType
 import jakarta.ws.rs.core.Response
 import org.eclipse.microprofile.openapi.annotations.Operation
@@ -37,11 +38,11 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag
 class TagResource
     @Inject
     constructor(
-        private val tagService: com.revethq.documents.service.TagService,
+        private val tagService: TagService,
     ) {
         @GET
         @RequiresPermission(action = Actions.Tag.LIST, resource = "urn:revet:documents:{tenantId}:tag/*")
-        @Operation(summary = "List all tags", description = "Retrieve a list of all tags")
+        @Operation(summary = "List all tags", description = "Retrieve a list of all tags for an organization")
         @APIResponses(
             APIResponse(
                 responseCode = "200",
@@ -49,17 +50,17 @@ class TagResource
                 content = [
                     Content(
                         mediaType = MediaType.APPLICATION_JSON,
-                        schema = Schema(implementation = com.revethq.documents.dto.TagDTO::class),
+                        schema = Schema(implementation = TagDTO::class),
                     ),
                 ],
             ),
             APIResponse(responseCode = "403", description = "Insufficient permissions"),
         )
-        fun listTags(): List<com.revethq.documents.dto.TagDTO> =
-            tagService.getAllTags().map {
-                com.revethq.documents.api.mapper.TagDTOMapper
-                    .toDTO(it)
-            }
+        fun listTags(
+            @QueryParam("organizationId")
+            @Parameter(description = "Organization ID", required = true)
+            organizationId: Long,
+        ): List<TagDTO> = tagService.getAllTags(organizationId).map { TagDTOMapper.toDTO(it) }
 
         @GET
         @Path("/{id}")
@@ -72,7 +73,7 @@ class TagResource
                 content = [
                     Content(
                         mediaType = MediaType.APPLICATION_JSON,
-                        schema = Schema(implementation = com.revethq.documents.dto.TagDTO::class),
+                        schema = Schema(implementation = TagDTO::class),
                     ),
                 ],
             ),
@@ -90,7 +91,7 @@ class TagResource
                         .status(Response.Status.NOT_FOUND)
                         .type("application/problem+json")
                         .entity(
-                            com.revethq.documents.dto.ProblemDetail(
+                            ProblemDetail(
                                 type = "https://docs.revethq.com/problems/not-found",
                                 title = "Tag Not Found",
                                 status = 404,
@@ -98,11 +99,7 @@ class TagResource
                             ),
                         ).build()
 
-            return Response
-                .ok(
-                    com.revethq.documents.api.mapper.TagDTOMapper
-                        .toDTO(tag),
-                ).build()
+            return Response.ok(TagDTOMapper.toDTO(tag)).build()
         }
 
         @GET
@@ -116,7 +113,7 @@ class TagResource
                 content = [
                     Content(
                         mediaType = MediaType.APPLICATION_JSON,
-                        schema = Schema(implementation = com.revethq.documents.dto.TagDTO::class),
+                        schema = Schema(implementation = TagDTO::class),
                     ),
                 ],
             ),
@@ -127,14 +124,17 @@ class TagResource
             @PathParam("slug")
             @Parameter(description = "Tag slug")
             slug: String,
+            @QueryParam("organizationId")
+            @Parameter(description = "Organization ID", required = true)
+            organizationId: Long,
         ): Response {
             val tag =
-                tagService.getTagBySlug(slug)
+                tagService.getTagBySlug(slug, organizationId)
                     ?: return Response
                         .status(Response.Status.NOT_FOUND)
                         .type("application/problem+json")
                         .entity(
-                            com.revethq.documents.dto.ProblemDetail(
+                            ProblemDetail(
                                 type = "https://docs.revethq.com/problems/not-found",
                                 title = "Tag Not Found",
                                 status = 404,
@@ -142,11 +142,7 @@ class TagResource
                             ),
                         ).build()
 
-            return Response
-                .ok(
-                    com.revethq.documents.api.mapper.TagDTOMapper
-                        .toDTO(tag),
-                ).build()
+            return Response.ok(TagDTOMapper.toDTO(tag)).build()
         }
 
         @POST
@@ -159,7 +155,7 @@ class TagResource
                 content = [
                     Content(
                         mediaType = MediaType.APPLICATION_JSON,
-                        schema = Schema(implementation = com.revethq.documents.dto.TagDTO::class),
+                        schema = Schema(implementation = TagDTO::class),
                     ),
                 ],
             ),
@@ -167,20 +163,24 @@ class TagResource
             APIResponse(responseCode = "409", description = "Tag already exists"),
             APIResponse(responseCode = "403", description = "Insufficient permissions"),
         )
-        fun createTag(request: com.revethq.documents.dto.CreateTagRequest): Response =
+        fun createTag(
+            @QueryParam("organizationId")
+            @Parameter(description = "Organization ID", required = true)
+            organizationId: Long,
+            request: CreateTagRequest,
+        ): Response =
             try {
                 val tag =
                     tagService.createTag(
                         name = request.name,
+                        organizationId = organizationId,
                         slug = request.slug,
                     )
 
                 Response
                     .status(Response.Status.CREATED)
-                    .entity(
-                        com.revethq.documents.api.mapper.TagDTOMapper
-                            .toDTO(tag),
-                    ).build()
+                    .entity(TagDTOMapper.toDTO(tag))
+                    .build()
             } catch (e: IllegalArgumentException) {
                 val status =
                     if (e.message?.contains("already exists") == true) {
@@ -192,7 +192,7 @@ class TagResource
                     .status(status)
                     .type("application/problem+json")
                     .entity(
-                        com.revethq.documents.dto.ProblemDetail(
+                        ProblemDetail(
                             type =
                                 "https://docs.revethq.com/problems/" +
                                     if (status == Response.Status.CONFLICT) "conflict" else "validation-error",
@@ -219,7 +219,7 @@ class TagResource
                 content = [
                     Content(
                         mediaType = MediaType.APPLICATION_JSON,
-                        schema = Schema(implementation = com.revethq.documents.dto.TagDTO::class),
+                        schema = Schema(implementation = TagDTO::class),
                     ),
                 ],
             ),
@@ -232,7 +232,7 @@ class TagResource
             @PathParam("id")
             @Parameter(description = "Tag ID")
             id: Int,
-            request: com.revethq.documents.dto.UpdateTagRequest,
+            request: UpdateTagRequest,
         ): Response {
             return try {
                 val tag =
@@ -244,7 +244,7 @@ class TagResource
                         .status(Response.Status.NOT_FOUND)
                         .type("application/problem+json")
                         .entity(
-                            com.revethq.documents.dto.ProblemDetail(
+                            ProblemDetail(
                                 type = "https://docs.revethq.com/problems/not-found",
                                 title = "Tag Not Found",
                                 status = 404,
@@ -252,11 +252,7 @@ class TagResource
                             ),
                         ).build()
 
-                Response
-                    .ok(
-                        com.revethq.documents.api.mapper.TagDTOMapper
-                            .toDTO(tag),
-                    ).build()
+                Response.ok(TagDTOMapper.toDTO(tag)).build()
             } catch (e: IllegalArgumentException) {
                 val status =
                     if (e.message?.contains("already exists") == true) {
@@ -268,7 +264,7 @@ class TagResource
                     .status(status)
                     .type("application/problem+json")
                     .entity(
-                        com.revethq.documents.dto.ProblemDetail(
+                        ProblemDetail(
                             type =
                                 "https://docs.revethq.com/problems/" +
                                     if (status == Response.Status.CONFLICT) "conflict" else "validation-error",
@@ -307,7 +303,7 @@ class TagResource
                     .status(Response.Status.NOT_FOUND)
                     .type("application/problem+json")
                     .entity(
-                        com.revethq.documents.dto.ProblemDetail(
+                        ProblemDetail(
                             type = "https://docs.revethq.com/problems/not-found",
                             title = "Tag Not Found",
                             status = 404,

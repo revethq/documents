@@ -1,8 +1,8 @@
 package com.revethq.documents.repository
 
+import com.revethq.core.repository.entity.ProjectEntity
 import com.revethq.documents.domain.Category
 import com.revethq.documents.repository.entity.CategoryEntity
-import com.revethq.documents.repository.entity.ProjectEntity
 import com.revethq.documents.repository.mapper.CategoryMapper
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.transaction.Transactional
