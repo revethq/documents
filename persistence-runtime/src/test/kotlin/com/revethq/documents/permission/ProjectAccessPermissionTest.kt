@@ -87,19 +87,21 @@ class ProjectAccessPermissionTest {
 
     @Test
     fun `user with wildcard organization permission can access any organization`() {
-        val policy = Policy(
-            id = UUID.randomUUID(),
-            name = "AllOrgsViewPolicy",
-            version = POLICY_VERSION,
-            tenantId = tenantId,
-            statements = listOf(
-                Statement(
-                    effect = Effect.ALLOW,
-                    actions = CoreActions.Organization.READ_ONLY,
-                    resources = listOf("urn:revet:core:$tenantId:organization/*"),
-                ),
-            ),
-        )
+        val policy =
+            Policy(
+                id = UUID.randomUUID(),
+                name = "AllOrgsViewPolicy",
+                version = POLICY_VERSION,
+                tenantId = tenantId,
+                statements =
+                    listOf(
+                        Statement(
+                            effect = Effect.ALLOW,
+                            actions = CoreActions.Organization.READ_ONLY,
+                            resources = listOf("urn:revet:core:$tenantId:organization/*"),
+                        ),
+                    ),
+            )
         every { policyCollector.collectPolicies(principalUrn) } returns listOf(policy)
 
         assertTrue(evaluator.evaluate(orgGetRequest(orgAlphaUuid)).isAllowed())
@@ -134,19 +136,21 @@ class ProjectAccessPermissionTest {
 
     @Test
     fun `all projects are returned when user has wildcard organization permission`() {
-        val policy = Policy(
-            id = UUID.randomUUID(),
-            name = "AllOrgsViewPolicy",
-            version = POLICY_VERSION,
-            tenantId = tenantId,
-            statements = listOf(
-                Statement(
-                    effect = Effect.ALLOW,
-                    actions = listOf(CoreActions.Organization.GET),
-                    resources = listOf("urn:revet:core:$tenantId:organization/*"),
-                ),
-            ),
-        )
+        val policy =
+            Policy(
+                id = UUID.randomUUID(),
+                name = "AllOrgsViewPolicy",
+                version = POLICY_VERSION,
+                tenantId = tenantId,
+                statements =
+                    listOf(
+                        Statement(
+                            effect = Effect.ALLOW,
+                            actions = listOf(CoreActions.Organization.GET),
+                            resources = listOf("urn:revet:core:$tenantId:organization/*"),
+                        ),
+                    ),
+            )
 
         val accessibleProjects = filterProjectsByOrgAccess(allProjects, listOf(policy))
 
@@ -190,22 +194,25 @@ class ProjectAccessPermissionTest {
 
     @Test
     fun `user with multiple project grants can access all granted projects`() {
-        val policy = Policy(
-            id = UUID.randomUUID(),
-            name = "MultiProjectViewPolicy",
-            version = POLICY_VERSION,
-            tenantId = tenantId,
-            statements = listOf(
-                Statement(
-                    effect = Effect.ALLOW,
-                    actions = listOf(CoreActions.Project.GET),
-                    resources = listOf(
-                        "urn:revet:core:$tenantId:project/${project1InAlpha.uuid}",
-                        "urn:revet:core:$tenantId:project/${project4InBeta.uuid}",
+        val policy =
+            Policy(
+                id = UUID.randomUUID(),
+                name = "MultiProjectViewPolicy",
+                version = POLICY_VERSION,
+                tenantId = tenantId,
+                statements =
+                    listOf(
+                        Statement(
+                            effect = Effect.ALLOW,
+                            actions = listOf(CoreActions.Project.GET),
+                            resources =
+                                listOf(
+                                    "urn:revet:core:$tenantId:project/${project1InAlpha.uuid}",
+                                    "urn:revet:core:$tenantId:project/${project4InBeta.uuid}",
+                                ),
+                        ),
                     ),
-                ),
-            ),
-        )
+            )
         every { policyCollector.collectPolicies(principalUrn) } returns listOf(policy)
 
         assertTrue(evaluator.evaluate(projectGetRequest(project1InAlpha.uuid)).isAllowed())
@@ -220,10 +227,11 @@ class ProjectAccessPermissionTest {
 
     @Test
     fun `filtering combines organization access and direct project grants`() {
-        val policies = listOf(
-            orgViewPolicy(orgAlphaUuid),
-            projectViewPolicy(project3InBeta.uuid),
-        )
+        val policies =
+            listOf(
+                orgViewPolicy(orgAlphaUuid),
+                projectViewPolicy(project3InBeta.uuid),
+            )
 
         val accessibleProjects = filterProjectsByAccess(allProjects, policies)
 
@@ -247,32 +255,34 @@ class ProjectAccessPermissionTest {
 
     @Test
     fun `explicit deny on project overrides organization-level allow`() {
-        val policy = Policy(
-            id = UUID.randomUUID(),
-            name = "OrgAllowWithProjectDeny",
-            version = POLICY_VERSION,
-            tenantId = tenantId,
-            statements = listOf(
-                Statement(
-                    sid = "AllowOrgAlpha",
-                    effect = Effect.ALLOW,
-                    actions = listOf(CoreActions.Organization.GET),
-                    resources = listOf("urn:revet:core:$tenantId:organization/$orgAlphaUuid"),
-                ),
-                Statement(
-                    sid = "AllowAllProjects",
-                    effect = Effect.ALLOW,
-                    actions = listOf(CoreActions.Project.GET),
-                    resources = listOf("urn:revet:core:$tenantId:project/*"),
-                ),
-                Statement(
-                    sid = "DenyConfidentialProject",
-                    effect = Effect.DENY,
-                    actions = listOf(CoreActions.Project.GET),
-                    resources = listOf("urn:revet:core:$tenantId:project/${project1InAlpha.uuid}"),
-                ),
-            ),
-        )
+        val policy =
+            Policy(
+                id = UUID.randomUUID(),
+                name = "OrgAllowWithProjectDeny",
+                version = POLICY_VERSION,
+                tenantId = tenantId,
+                statements =
+                    listOf(
+                        Statement(
+                            sid = "AllowOrgAlpha",
+                            effect = Effect.ALLOW,
+                            actions = listOf(CoreActions.Organization.GET),
+                            resources = listOf("urn:revet:core:$tenantId:organization/$orgAlphaUuid"),
+                        ),
+                        Statement(
+                            sid = "AllowAllProjects",
+                            effect = Effect.ALLOW,
+                            actions = listOf(CoreActions.Project.GET),
+                            resources = listOf("urn:revet:core:$tenantId:project/*"),
+                        ),
+                        Statement(
+                            sid = "DenyConfidentialProject",
+                            effect = Effect.DENY,
+                            actions = listOf(CoreActions.Project.GET),
+                            resources = listOf("urn:revet:core:$tenantId:project/${project1InAlpha.uuid}"),
+                        ),
+                    ),
+            )
         every { policyCollector.collectPolicies(principalUrn) } returns listOf(policy)
 
         assertTrue(evaluator.evaluate(orgGetRequest(orgAlphaUuid)).isAllowed())
@@ -285,29 +295,31 @@ class ProjectAccessPermissionTest {
 
     @Test
     fun `explicit deny on project is excluded from combined filtering`() {
-        val policy = Policy(
-            id = UUID.randomUUID(),
-            name = "OrgAllowWithProjectDeny",
-            version = POLICY_VERSION,
-            tenantId = tenantId,
-            statements = listOf(
-                Statement(
-                    effect = Effect.ALLOW,
-                    actions = listOf(CoreActions.Organization.GET),
-                    resources = listOf("urn:revet:core:$tenantId:organization/$orgAlphaUuid"),
-                ),
-                Statement(
-                    effect = Effect.ALLOW,
-                    actions = listOf(CoreActions.Project.GET),
-                    resources = listOf("urn:revet:core:$tenantId:project/*"),
-                ),
-                Statement(
-                    effect = Effect.DENY,
-                    actions = listOf(CoreActions.Project.GET),
-                    resources = listOf("urn:revet:core:$tenantId:project/${project1InAlpha.uuid}"),
-                ),
-            ),
-        )
+        val policy =
+            Policy(
+                id = UUID.randomUUID(),
+                name = "OrgAllowWithProjectDeny",
+                version = POLICY_VERSION,
+                tenantId = tenantId,
+                statements =
+                    listOf(
+                        Statement(
+                            effect = Effect.ALLOW,
+                            actions = listOf(CoreActions.Organization.GET),
+                            resources = listOf("urn:revet:core:$tenantId:organization/$orgAlphaUuid"),
+                        ),
+                        Statement(
+                            effect = Effect.ALLOW,
+                            actions = listOf(CoreActions.Project.GET),
+                            resources = listOf("urn:revet:core:$tenantId:project/*"),
+                        ),
+                        Statement(
+                            effect = Effect.DENY,
+                            actions = listOf(CoreActions.Project.GET),
+                            resources = listOf("urn:revet:core:$tenantId:project/${project1InAlpha.uuid}"),
+                        ),
+                    ),
+            )
         val policies = listOf(policy)
 
         val accessibleProjects = filterProjectsByAccess(allProjects, policies)
@@ -339,10 +351,11 @@ class ProjectAccessPermissionTest {
         policies: List<Policy>,
     ): List<Project> =
         projects.filter { project ->
-            val projectResult = evaluator.evaluateWithPolicies(
-                projectGetRequest(project.uuid),
-                policies,
-            )
+            val projectResult =
+                evaluator.evaluateWithPolicies(
+                    projectGetRequest(project.uuid),
+                    policies,
+                )
 
             if (projectResult.isExplicitDeny) return@filter false
             if (projectResult.isAllowed()) return@filter true
@@ -371,13 +384,14 @@ class ProjectAccessPermissionTest {
             name = "OrgViewPolicy-$orgUuid",
             version = POLICY_VERSION,
             tenantId = tenantId,
-            statements = listOf(
-                Statement(
-                    effect = Effect.ALLOW,
-                    actions = CoreActions.Organization.READ_ONLY,
-                    resources = listOf("urn:revet:core:$tenantId:organization/$orgUuid"),
+            statements =
+                listOf(
+                    Statement(
+                        effect = Effect.ALLOW,
+                        actions = CoreActions.Organization.READ_ONLY,
+                        resources = listOf("urn:revet:core:$tenantId:organization/$orgUuid"),
+                    ),
                 ),
-            ),
         )
 
     private fun projectViewPolicy(projectUuid: UUID) =
@@ -386,16 +400,20 @@ class ProjectAccessPermissionTest {
             name = "ProjectViewPolicy-$projectUuid",
             version = POLICY_VERSION,
             tenantId = tenantId,
-            statements = listOf(
-                Statement(
-                    effect = Effect.ALLOW,
-                    actions = CoreActions.Project.READ_ONLY,
-                    resources = listOf("urn:revet:core:$tenantId:project/$projectUuid"),
+            statements =
+                listOf(
+                    Statement(
+                        effect = Effect.ALLOW,
+                        actions = CoreActions.Project.READ_ONLY,
+                        resources = listOf("urn:revet:core:$tenantId:project/$projectUuid"),
+                    ),
                 ),
-            ),
         )
 
-    private fun createProject(id: Long, organizationId: Long): Project {
+    private fun createProject(
+        id: Long,
+        organizationId: Long,
+    ): Project {
         val now = LocalDateTime.now()
         return Project(
             id = id,
@@ -406,11 +424,12 @@ class ProjectAccessPermissionTest {
             clientIds = emptySet(),
             tags = emptySet(),
             isActive = true,
-            timestamps = Project.Timestamps(
-                createdAt = now,
-                modifiedAt = now,
-                removedAt = null,
-            ),
+            timestamps =
+                Project.Timestamps(
+                    createdAt = now,
+                    modifiedAt = now,
+                    removedAt = null,
+                ),
         )
     }
 }

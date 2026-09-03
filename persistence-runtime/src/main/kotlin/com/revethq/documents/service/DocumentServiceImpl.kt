@@ -7,7 +7,10 @@ import com.revethq.core.repository.TaggedItemRepository
 import com.revethq.documents.domain.Document
 import com.revethq.documents.domain.Page
 import com.revethq.documents.domain.PageRequest
+import com.revethq.documents.permission.Actions
+import com.revethq.documents.permission.DocumentsUrn
 import com.revethq.documents.repository.DocumentRepository
+import com.revethq.iam.permission.web.filter.AuthorizationContext
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
@@ -24,6 +27,9 @@ class DocumentServiceImpl
         private val tagRepository: TagRepository,
         private val taggedItemRepository: TaggedItemRepository,
         private val projectRepository: ProjectRepository,
+        private val permissionFilterService: PermissionFilterService,
+        private val urn: DocumentsUrn,
+        private val authorizationContext: AuthorizationContext,
     ) : DocumentService {
         companion object {
             fun documentUrn(uuid: UUID): String = "urn:revet:documents::document/$uuid"
@@ -36,7 +42,13 @@ class DocumentServiceImpl
             return project.organizationId
         }
 
-        override fun getAllDocuments(includeInactive: Boolean): List<Document> = documentRepository.findAll(includeInactive)
+        override fun getAllDocuments(includeInactive: Boolean): List<Document> {
+            val documents = documentRepository.findAll(includeInactive)
+            val tenantId = authorizationContext.tenantId ?: ""
+            return permissionFilterService.filter(documents, Actions.Document.GET) { doc ->
+                urn.document(tenantId, doc.uuid)
+            }
+        }
 
         override fun getDocumentById(id: Long): Document? = documentRepository.findById(id)
 
@@ -216,14 +228,27 @@ class DocumentServiceImpl
             categoryId: Long?,
             tagIds: List<Int>?,
             organizationIds: List<Long>?,
-        ): Page<Document> =
-            documentRepository.findByFilters(
-                pageRequest = pageRequest,
-                includeInactive = includeInactive,
-                name = name,
-                projectId = projectId,
-                categoryId = categoryId,
-                tagIds = tagIds,
-                organizationIds = organizationIds,
+        ): Page<Document> {
+            val page =
+                documentRepository.findByFilters(
+                    pageRequest = pageRequest,
+                    includeInactive = includeInactive,
+                    name = name,
+                    projectId = projectId,
+                    categoryId = categoryId,
+                    tagIds = tagIds,
+                    organizationIds = organizationIds,
+                )
+            val tenantId = authorizationContext.tenantId ?: ""
+            val filtered =
+                permissionFilterService.filter(page.content, Actions.Document.GET) { doc ->
+                    urn.document(tenantId, doc.uuid)
+                }
+            return Page(
+                content = filtered,
+                page = page.page,
+                size = page.size,
+                hasMore = page.hasMore,
             )
+        }
     }

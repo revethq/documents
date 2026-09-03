@@ -80,10 +80,11 @@ class DocumentAccessPermissionTest {
 
     @Test
     fun `user with multiple project policies can access all granted projects`() {
-        val policies = listOf(
-            projectViewPolicy(projectAlphaUuid),
-            projectViewPolicy(projectBetaUuid),
-        )
+        val policies =
+            listOf(
+                projectViewPolicy(projectAlphaUuid),
+                projectViewPolicy(projectBetaUuid),
+            )
         every { policyCollector.collectPolicies(principalUrn) } returns policies
 
         assertTrue(evaluator.evaluate(projectGetRequest(projectAlphaUuid)).isAllowed())
@@ -92,19 +93,21 @@ class DocumentAccessPermissionTest {
 
     @Test
     fun `user with wildcard project permission can access any project`() {
-        val policy = Policy(
-            id = UUID.randomUUID(),
-            name = "AllProjectsViewPolicy",
-            version = POLICY_VERSION,
-            tenantId = tenantId,
-            statements = listOf(
-                Statement(
-                    effect = Effect.ALLOW,
-                    actions = CoreActions.Project.READ_ONLY,
-                    resources = listOf("urn:revet:core:$tenantId:project/*"),
-                ),
-            ),
-        )
+        val policy =
+            Policy(
+                id = UUID.randomUUID(),
+                name = "AllProjectsViewPolicy",
+                version = POLICY_VERSION,
+                tenantId = tenantId,
+                statements =
+                    listOf(
+                        Statement(
+                            effect = Effect.ALLOW,
+                            actions = CoreActions.Project.READ_ONLY,
+                            resources = listOf("urn:revet:core:$tenantId:project/*"),
+                        ),
+                    ),
+            )
         every { policyCollector.collectPolicies(principalUrn) } returns listOf(policy)
 
         assertTrue(evaluator.evaluate(projectGetRequest(projectAlphaUuid)).isAllowed())
@@ -139,19 +142,21 @@ class DocumentAccessPermissionTest {
 
     @Test
     fun `all documents are returned when user has wildcard project permission`() {
-        val policy = Policy(
-            id = UUID.randomUUID(),
-            name = "AllProjectsViewPolicy",
-            version = POLICY_VERSION,
-            tenantId = tenantId,
-            statements = listOf(
-                Statement(
-                    effect = Effect.ALLOW,
-                    actions = listOf(CoreActions.Project.GET),
-                    resources = listOf("urn:revet:core:$tenantId:project/*"),
-                ),
-            ),
-        )
+        val policy =
+            Policy(
+                id = UUID.randomUUID(),
+                name = "AllProjectsViewPolicy",
+                version = POLICY_VERSION,
+                tenantId = tenantId,
+                statements =
+                    listOf(
+                        Statement(
+                            effect = Effect.ALLOW,
+                            actions = listOf(CoreActions.Project.GET),
+                            resources = listOf("urn:revet:core:$tenantId:project/*"),
+                        ),
+                    ),
+            )
 
         val accessibleDocuments = filterDocumentsByProjectAccess(allDocuments, listOf(policy))
 
@@ -195,22 +200,25 @@ class DocumentAccessPermissionTest {
 
     @Test
     fun `user with multiple document grants can access all granted documents`() {
-        val policy = Policy(
-            id = UUID.randomUUID(),
-            name = "MultiDocumentViewPolicy",
-            version = POLICY_VERSION,
-            tenantId = tenantId,
-            statements = listOf(
-                Statement(
-                    effect = Effect.ALLOW,
-                    actions = listOf(Actions.Document.GET),
-                    resources = listOf(
-                        "urn:revet:documents:$tenantId:document/${doc1InAlpha.uuid}",
-                        "urn:revet:documents:$tenantId:document/${doc4InBeta.uuid}",
+        val policy =
+            Policy(
+                id = UUID.randomUUID(),
+                name = "MultiDocumentViewPolicy",
+                version = POLICY_VERSION,
+                tenantId = tenantId,
+                statements =
+                    listOf(
+                        Statement(
+                            effect = Effect.ALLOW,
+                            actions = listOf(Actions.Document.GET),
+                            resources =
+                                listOf(
+                                    "urn:revet:documents:$tenantId:document/${doc1InAlpha.uuid}",
+                                    "urn:revet:documents:$tenantId:document/${doc4InBeta.uuid}",
+                                ),
+                        ),
                     ),
-                ),
-            ),
-        )
+            )
         every { policyCollector.collectPolicies(principalUrn) } returns listOf(policy)
 
         assertTrue(evaluator.evaluate(documentGetRequest(doc1InAlpha.uuid)).isAllowed())
@@ -226,10 +234,11 @@ class DocumentAccessPermissionTest {
     @Test
     fun `filtering combines project access and direct document grants`() {
         // User can view project Alpha + has a direct grant on doc3 in project Beta
-        val policies = listOf(
-            projectViewPolicy(projectAlphaUuid),
-            documentViewPolicy(doc3InBeta.uuid),
-        )
+        val policies =
+            listOf(
+                projectViewPolicy(projectAlphaUuid),
+                documentViewPolicy(doc3InBeta.uuid),
+            )
 
         val accessibleDocuments = filterDocumentsByAccess(allDocuments, policies)
 
@@ -253,32 +262,34 @@ class DocumentAccessPermissionTest {
 
     @Test
     fun `explicit deny on document overrides project-level allow`() {
-        val policy = Policy(
-            id = UUID.randomUUID(),
-            name = "ProjectAllowWithDocumentDeny",
-            version = POLICY_VERSION,
-            tenantId = tenantId,
-            statements = listOf(
-                Statement(
-                    sid = "AllowProjectAlpha",
-                    effect = Effect.ALLOW,
-                    actions = listOf(CoreActions.Project.GET),
-                    resources = listOf("urn:revet:core:$tenantId:project/$projectAlphaUuid"),
-                ),
-                Statement(
-                    sid = "AllowAllDocuments",
-                    effect = Effect.ALLOW,
-                    actions = listOf(Actions.Document.GET),
-                    resources = listOf("urn:revet:documents:$tenantId:document/*"),
-                ),
-                Statement(
-                    sid = "DenyConfidentialDocument",
-                    effect = Effect.DENY,
-                    actions = listOf(Actions.Document.GET),
-                    resources = listOf("urn:revet:documents:$tenantId:document/${doc1InAlpha.uuid}"),
-                ),
-            ),
-        )
+        val policy =
+            Policy(
+                id = UUID.randomUUID(),
+                name = "ProjectAllowWithDocumentDeny",
+                version = POLICY_VERSION,
+                tenantId = tenantId,
+                statements =
+                    listOf(
+                        Statement(
+                            sid = "AllowProjectAlpha",
+                            effect = Effect.ALLOW,
+                            actions = listOf(CoreActions.Project.GET),
+                            resources = listOf("urn:revet:core:$tenantId:project/$projectAlphaUuid"),
+                        ),
+                        Statement(
+                            sid = "AllowAllDocuments",
+                            effect = Effect.ALLOW,
+                            actions = listOf(Actions.Document.GET),
+                            resources = listOf("urn:revet:documents:$tenantId:document/*"),
+                        ),
+                        Statement(
+                            sid = "DenyConfidentialDocument",
+                            effect = Effect.DENY,
+                            actions = listOf(Actions.Document.GET),
+                            resources = listOf("urn:revet:documents:$tenantId:document/${doc1InAlpha.uuid}"),
+                        ),
+                    ),
+            )
         every { policyCollector.collectPolicies(principalUrn) } returns listOf(policy)
 
         // Project access is allowed
@@ -295,29 +306,31 @@ class DocumentAccessPermissionTest {
 
     @Test
     fun `explicit deny on document is excluded from combined filtering`() {
-        val policy = Policy(
-            id = UUID.randomUUID(),
-            name = "ProjectAllowWithDocumentDeny",
-            version = POLICY_VERSION,
-            tenantId = tenantId,
-            statements = listOf(
-                Statement(
-                    effect = Effect.ALLOW,
-                    actions = listOf(CoreActions.Project.GET),
-                    resources = listOf("urn:revet:core:$tenantId:project/$projectAlphaUuid"),
-                ),
-                Statement(
-                    effect = Effect.ALLOW,
-                    actions = listOf(Actions.Document.GET),
-                    resources = listOf("urn:revet:documents:$tenantId:document/*"),
-                ),
-                Statement(
-                    effect = Effect.DENY,
-                    actions = listOf(Actions.Document.GET),
-                    resources = listOf("urn:revet:documents:$tenantId:document/${doc1InAlpha.uuid}"),
-                ),
-            ),
-        )
+        val policy =
+            Policy(
+                id = UUID.randomUUID(),
+                name = "ProjectAllowWithDocumentDeny",
+                version = POLICY_VERSION,
+                tenantId = tenantId,
+                statements =
+                    listOf(
+                        Statement(
+                            effect = Effect.ALLOW,
+                            actions = listOf(CoreActions.Project.GET),
+                            resources = listOf("urn:revet:core:$tenantId:project/$projectAlphaUuid"),
+                        ),
+                        Statement(
+                            effect = Effect.ALLOW,
+                            actions = listOf(Actions.Document.GET),
+                            resources = listOf("urn:revet:documents:$tenantId:document/*"),
+                        ),
+                        Statement(
+                            effect = Effect.DENY,
+                            actions = listOf(Actions.Document.GET),
+                            resources = listOf("urn:revet:documents:$tenantId:document/${doc1InAlpha.uuid}"),
+                        ),
+                    ),
+            )
         val policies = listOf(policy)
 
         val accessibleDocuments = filterDocumentsByAccess(allDocuments, policies)
@@ -358,10 +371,11 @@ class DocumentAccessPermissionTest {
         policies: List<Policy>,
     ): List<Document> =
         documents.filter { doc ->
-            val documentResult = evaluator.evaluateWithPolicies(
-                documentGetRequest(doc.uuid),
-                policies,
-            )
+            val documentResult =
+                evaluator.evaluateWithPolicies(
+                    documentGetRequest(doc.uuid),
+                    policies,
+                )
 
             // Explicit deny always wins
             if (documentResult.isExplicitDeny) return@filter false
@@ -394,13 +408,14 @@ class DocumentAccessPermissionTest {
             name = "ProjectViewPolicy-$projectUuid",
             version = POLICY_VERSION,
             tenantId = tenantId,
-            statements = listOf(
-                Statement(
-                    effect = Effect.ALLOW,
-                    actions = CoreActions.Project.READ_ONLY,
-                    resources = listOf("urn:revet:core:$tenantId:project/$projectUuid"),
+            statements =
+                listOf(
+                    Statement(
+                        effect = Effect.ALLOW,
+                        actions = CoreActions.Project.READ_ONLY,
+                        resources = listOf("urn:revet:core:$tenantId:project/$projectUuid"),
+                    ),
                 ),
-            ),
         )
 
     private fun documentViewPolicy(documentUuid: UUID) =
@@ -409,26 +424,29 @@ class DocumentAccessPermissionTest {
             name = "DocumentViewPolicy-$documentUuid",
             version = POLICY_VERSION,
             tenantId = tenantId,
-            statements = listOf(
-                Statement(
-                    effect = Effect.ALLOW,
-                    actions = listOf(Actions.Document.GET, Actions.Document.LIST),
-                    resources = listOf("urn:revet:documents:$tenantId:document/$documentUuid"),
+            statements =
+                listOf(
+                    Statement(
+                        effect = Effect.ALLOW,
+                        actions = listOf(Actions.Document.GET, Actions.Document.LIST),
+                        resources = listOf("urn:revet:documents:$tenantId:document/$documentUuid"),
+                    ),
                 ),
-            ),
         )
 
-    private fun createDocument(id: Long, projectId: Long) =
-        Document(
-            id = id,
-            uuid = UUID.randomUUID(),
-            name = "Document $id",
-            projectId = projectId,
-            categoryId = null,
-            mime = "application/pdf",
-            date = LocalDateTime.now(),
-            tags = emptySet(),
-            isActive = true,
-            removedAt = null,
-        )
+    private fun createDocument(
+        id: Long,
+        projectId: Long,
+    ) = Document(
+        id = id,
+        uuid = UUID.randomUUID(),
+        name = "Document $id",
+        projectId = projectId,
+        categoryId = null,
+        mime = "application/pdf",
+        date = LocalDateTime.now(),
+        tags = emptySet(),
+        isActive = true,
+        removedAt = null,
+    )
 }

@@ -7,11 +7,15 @@ import com.revethq.core.repository.entity.ProjectEntity
 import com.revethq.core.repository.mapper.OrganizationMapper
 import com.revethq.core.repository.mapper.ProjectMapper
 import com.revethq.documents.domain.Document
+import com.revethq.documents.permission.Actions
+import com.revethq.documents.permission.DocumentsUrn
 import com.revethq.documents.repository.entity.DocumentEntity
 import com.revethq.documents.repository.mapper.DocumentMapper
+import com.revethq.iam.permission.web.filter.AuthorizationContext
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.persistence.EntityManager
+import com.revethq.core.permission.Actions as CoreActions
 
 /**
  * Implementation of SearchService using PostgreSQL full-text search.
@@ -21,6 +25,9 @@ class SearchServiceImpl
     @Inject
     constructor(
         private val entityManager: EntityManager,
+        private val permissionFilterService: PermissionFilterService,
+        private val urn: DocumentsUrn,
+        private val authorizationContext: AuthorizationContext,
     ) : SearchService {
         override fun searchDocuments(
             query: String,
@@ -52,7 +59,11 @@ class SearchServiceImpl
                     .setParameter("maxResults", maxResults)
                     .resultList as List<DocumentEntity>
 
-            return results.map { DocumentMapper.toDomain(it) }
+            val documents = results.map { DocumentMapper.toDomain(it) }
+            val tenantId = authorizationContext.tenantId ?: ""
+            return permissionFilterService.filter(documents, Actions.Document.GET) { doc ->
+                urn.document(tenantId, doc.uuid)
+            }
         }
 
         override fun searchProjects(
@@ -87,7 +98,11 @@ class SearchServiceImpl
                     .setParameter("maxResults", maxResults)
                     .resultList as List<ProjectEntity>
 
-            return results.map { ProjectMapper.toDomain(it) }
+            val projects = results.map { ProjectMapper.toDomain(it) }
+            val tenantId = authorizationContext.tenantId ?: ""
+            return permissionFilterService.filter(projects, CoreActions.Project.GET) { project ->
+                urn.project(tenantId, project.uuid)
+            }
         }
 
         override fun searchOrganizations(
@@ -117,7 +132,11 @@ class SearchServiceImpl
                     .setParameter("maxResults", maxResults)
                     .resultList as List<OrganizationEntity>
 
-            return results.map { OrganizationMapper.toDomain(it) }
+            val organizations = results.map { OrganizationMapper.toDomain(it) }
+            val tenantId = authorizationContext.tenantId ?: ""
+            return permissionFilterService.filter(organizations, CoreActions.Organization.GET) { org ->
+                urn.organization(tenantId, org.uuid)
+            }
         }
 
         override fun searchAll(

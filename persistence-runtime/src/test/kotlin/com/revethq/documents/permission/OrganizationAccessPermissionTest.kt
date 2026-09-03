@@ -69,10 +69,11 @@ class OrganizationAccessPermissionTest {
 
     @Test
     fun `user with multiple organization policies can access all granted organizations`() {
-        val policies = listOf(
-            orgViewPolicy(orgAlphaUuid),
-            orgViewPolicy(orgGammaUuid),
-        )
+        val policies =
+            listOf(
+                orgViewPolicy(orgAlphaUuid),
+                orgViewPolicy(orgGammaUuid),
+            )
         every { policyCollector.collectPolicies(principalUrn) } returns policies
 
         assertTrue(evaluator.evaluate(orgGetRequest(orgAlphaUuid)).isAllowed())
@@ -83,19 +84,21 @@ class OrganizationAccessPermissionTest {
 
     @Test
     fun `user with wildcard organization permission can access any organization`() {
-        val policy = Policy(
-            id = UUID.randomUUID(),
-            name = "AllOrgsViewPolicy",
-            version = POLICY_VERSION,
-            tenantId = tenantId,
-            statements = listOf(
-                Statement(
-                    effect = Effect.ALLOW,
-                    actions = CoreActions.Organization.READ_ONLY,
-                    resources = listOf("urn:revet:core:$tenantId:organization/*"),
-                ),
-            ),
-        )
+        val policy =
+            Policy(
+                id = UUID.randomUUID(),
+                name = "AllOrgsViewPolicy",
+                version = POLICY_VERSION,
+                tenantId = tenantId,
+                statements =
+                    listOf(
+                        Statement(
+                            effect = Effect.ALLOW,
+                            actions = CoreActions.Organization.READ_ONLY,
+                            resources = listOf("urn:revet:core:$tenantId:organization/*"),
+                        ),
+                    ),
+            )
         every { policyCollector.collectPolicies(principalUrn) } returns listOf(policy)
 
         allOrgUuids.forEach { orgUuid ->
@@ -106,19 +109,21 @@ class OrganizationAccessPermissionTest {
 
     @Test
     fun `service wildcard grants all organization actions`() {
-        val policy = Policy(
-            id = UUID.randomUUID(),
-            name = "CoreWildcardPolicy",
-            version = POLICY_VERSION,
-            tenantId = tenantId,
-            statements = listOf(
-                Statement(
-                    effect = Effect.ALLOW,
-                    actions = listOf(CoreActions.ALL_ACTIONS),
-                    resources = listOf("urn:revet:core:$tenantId:organization/*"),
-                ),
-            ),
-        )
+        val policy =
+            Policy(
+                id = UUID.randomUUID(),
+                name = "CoreWildcardPolicy",
+                version = POLICY_VERSION,
+                tenantId = tenantId,
+                statements =
+                    listOf(
+                        Statement(
+                            effect = Effect.ALLOW,
+                            actions = listOf(CoreActions.ALL_ACTIONS),
+                            resources = listOf("urn:revet:core:$tenantId:organization/*"),
+                        ),
+                    ),
+            )
         every { policyCollector.collectPolicies(principalUrn) } returns listOf(policy)
 
         assertTrue(evaluator.evaluate(orgGetRequest(orgAlphaUuid)).isAllowed())
@@ -133,10 +138,11 @@ class OrganizationAccessPermissionTest {
 
     @Test
     fun `only permitted organizations are returned when filtering`() {
-        val policies = listOf(
-            orgViewPolicy(orgAlphaUuid),
-            orgViewPolicy(orgGammaUuid),
-        )
+        val policies =
+            listOf(
+                orgViewPolicy(orgAlphaUuid),
+                orgViewPolicy(orgGammaUuid),
+            )
 
         val accessibleOrgs = filterOrganizations(allOrgUuids, policies)
 
@@ -153,19 +159,21 @@ class OrganizationAccessPermissionTest {
 
     @Test
     fun `all organizations are returned when user has wildcard permission`() {
-        val policy = Policy(
-            id = UUID.randomUUID(),
-            name = "AllOrgsViewPolicy",
-            version = POLICY_VERSION,
-            tenantId = tenantId,
-            statements = listOf(
-                Statement(
-                    effect = Effect.ALLOW,
-                    actions = listOf(CoreActions.Organization.GET),
-                    resources = listOf("urn:revet:core:$tenantId:organization/*"),
-                ),
-            ),
-        )
+        val policy =
+            Policy(
+                id = UUID.randomUUID(),
+                name = "AllOrgsViewPolicy",
+                version = POLICY_VERSION,
+                tenantId = tenantId,
+                statements =
+                    listOf(
+                        Statement(
+                            effect = Effect.ALLOW,
+                            actions = listOf(CoreActions.Organization.GET),
+                            resources = listOf("urn:revet:core:$tenantId:organization/*"),
+                        ),
+                    ),
+            )
 
         val accessibleOrgs = filterOrganizations(allOrgUuids, listOf(policy))
 
@@ -178,22 +186,25 @@ class OrganizationAccessPermissionTest {
 
     @Test
     fun `user granted permission to specific organizations can access only those`() {
-        val policy = Policy(
-            id = UUID.randomUUID(),
-            name = "MultiOrgViewPolicy",
-            version = POLICY_VERSION,
-            tenantId = tenantId,
-            statements = listOf(
-                Statement(
-                    effect = Effect.ALLOW,
-                    actions = listOf(CoreActions.Organization.GET),
-                    resources = listOf(
-                        "urn:revet:core:$tenantId:organization/$orgAlphaUuid",
-                        "urn:revet:core:$tenantId:organization/$orgDeltaUuid",
+        val policy =
+            Policy(
+                id = UUID.randomUUID(),
+                name = "MultiOrgViewPolicy",
+                version = POLICY_VERSION,
+                tenantId = tenantId,
+                statements =
+                    listOf(
+                        Statement(
+                            effect = Effect.ALLOW,
+                            actions = listOf(CoreActions.Organization.GET),
+                            resources =
+                                listOf(
+                                    "urn:revet:core:$tenantId:organization/$orgAlphaUuid",
+                                    "urn:revet:core:$tenantId:organization/$orgDeltaUuid",
+                                ),
+                        ),
                     ),
-                ),
-            ),
-        )
+            )
         every { policyCollector.collectPolicies(principalUrn) } returns listOf(policy)
 
         assertTrue(evaluator.evaluate(orgGetRequest(orgAlphaUuid)).isAllowed())
@@ -208,26 +219,28 @@ class OrganizationAccessPermissionTest {
 
     @Test
     fun `explicit deny on organization overrides wildcard allow`() {
-        val policy = Policy(
-            id = UUID.randomUUID(),
-            name = "AllowAllDenyOnePolicy",
-            version = POLICY_VERSION,
-            tenantId = tenantId,
-            statements = listOf(
-                Statement(
-                    sid = "AllowAllOrgs",
-                    effect = Effect.ALLOW,
-                    actions = CoreActions.Organization.READ_ONLY,
-                    resources = listOf("urn:revet:core:$tenantId:organization/*"),
-                ),
-                Statement(
-                    sid = "DenySpecificOrg",
-                    effect = Effect.DENY,
-                    actions = listOf(CoreActions.Organization.GET),
-                    resources = listOf("urn:revet:core:$tenantId:organization/$orgBetaUuid"),
-                ),
-            ),
-        )
+        val policy =
+            Policy(
+                id = UUID.randomUUID(),
+                name = "AllowAllDenyOnePolicy",
+                version = POLICY_VERSION,
+                tenantId = tenantId,
+                statements =
+                    listOf(
+                        Statement(
+                            sid = "AllowAllOrgs",
+                            effect = Effect.ALLOW,
+                            actions = CoreActions.Organization.READ_ONLY,
+                            resources = listOf("urn:revet:core:$tenantId:organization/*"),
+                        ),
+                        Statement(
+                            sid = "DenySpecificOrg",
+                            effect = Effect.DENY,
+                            actions = listOf(CoreActions.Organization.GET),
+                            resources = listOf("urn:revet:core:$tenantId:organization/$orgBetaUuid"),
+                        ),
+                    ),
+            )
         every { policyCollector.collectPolicies(principalUrn) } returns listOf(policy)
 
         assertTrue(evaluator.evaluate(orgGetRequest(orgAlphaUuid)).isAllowed())
@@ -240,24 +253,26 @@ class OrganizationAccessPermissionTest {
 
     @Test
     fun `explicit deny is excluded from filtered results`() {
-        val policy = Policy(
-            id = UUID.randomUUID(),
-            name = "AllowAllDenyOnePolicy",
-            version = POLICY_VERSION,
-            tenantId = tenantId,
-            statements = listOf(
-                Statement(
-                    effect = Effect.ALLOW,
-                    actions = listOf(CoreActions.Organization.GET),
-                    resources = listOf("urn:revet:core:$tenantId:organization/*"),
-                ),
-                Statement(
-                    effect = Effect.DENY,
-                    actions = listOf(CoreActions.Organization.GET),
-                    resources = listOf("urn:revet:core:$tenantId:organization/$orgBetaUuid"),
-                ),
-            ),
-        )
+        val policy =
+            Policy(
+                id = UUID.randomUUID(),
+                name = "AllowAllDenyOnePolicy",
+                version = POLICY_VERSION,
+                tenantId = tenantId,
+                statements =
+                    listOf(
+                        Statement(
+                            effect = Effect.ALLOW,
+                            actions = listOf(CoreActions.Organization.GET),
+                            resources = listOf("urn:revet:core:$tenantId:organization/*"),
+                        ),
+                        Statement(
+                            effect = Effect.DENY,
+                            actions = listOf(CoreActions.Organization.GET),
+                            resources = listOf("urn:revet:core:$tenantId:organization/$orgBetaUuid"),
+                        ),
+                    ),
+            )
 
         val accessibleOrgs = filterOrganizations(allOrgUuids, listOf(policy))
 
@@ -298,12 +313,14 @@ class OrganizationAccessPermissionTest {
             resourceUrn = "urn:revet:core:$tenantId:organization/*",
         )
 
-    private fun orgRequest(action: String, orgUuid: UUID) =
-        AuthorizationRequest(
-            principalUrn = principalUrn,
-            action = action,
-            resourceUrn = "urn:revet:core:$tenantId:organization/$orgUuid",
-        )
+    private fun orgRequest(
+        action: String,
+        orgUuid: UUID,
+    ) = AuthorizationRequest(
+        principalUrn = principalUrn,
+        action = action,
+        resourceUrn = "urn:revet:core:$tenantId:organization/$orgUuid",
+    )
 
     private fun orgViewPolicy(orgUuid: UUID) =
         Policy(
@@ -311,12 +328,13 @@ class OrganizationAccessPermissionTest {
             name = "OrgViewPolicy-$orgUuid",
             version = POLICY_VERSION,
             tenantId = tenantId,
-            statements = listOf(
-                Statement(
-                    effect = Effect.ALLOW,
-                    actions = CoreActions.Organization.READ_ONLY,
-                    resources = listOf("urn:revet:core:$tenantId:organization/$orgUuid"),
+            statements =
+                listOf(
+                    Statement(
+                        effect = Effect.ALLOW,
+                        actions = CoreActions.Organization.READ_ONLY,
+                        resources = listOf("urn:revet:core:$tenantId:organization/$orgUuid"),
+                    ),
                 ),
-            ),
         )
 }

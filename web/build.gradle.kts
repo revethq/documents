@@ -33,6 +33,9 @@ dependencies {
     // Docker container image
     implementation(libs.quarkus.container.image.docker)
 
+    // CycloneDX SBOM generation
+    implementation(libs.quarkus.cyclonedx)
+
     // Revet libraries
     implementation(libs.revet.core.web)
     implementation(libs.revet.capabilities.web)

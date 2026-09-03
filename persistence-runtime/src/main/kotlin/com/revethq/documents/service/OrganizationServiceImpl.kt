@@ -6,12 +6,14 @@ import com.revethq.core.service.OrganizationService
 import com.revethq.documents.permission.DocumentsUrn
 import com.revethq.documents.permission.PrebuiltPolicies
 import com.revethq.documents.service.CurrentUserService
+import com.revethq.documents.service.PermissionFilterService
 import com.revethq.iam.permission.persistence.service.PolicyService
 import com.revethq.iam.permission.service.PolicyAttachmentService
 import com.revethq.iam.permission.web.filter.AuthorizationContext
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import java.util.UUID
+import com.revethq.core.permission.Actions as CoreActions
 
 /**
  * Implementation of OrganizationService with business logic.
@@ -27,8 +29,15 @@ class OrganizationServiceImpl
         private val urn: DocumentsUrn,
         private val authorizationContext: AuthorizationContext,
         private val currentUserService: CurrentUserService,
+        private val permissionFilterService: PermissionFilterService,
     ) : OrganizationService {
-        override fun getAllOrganizations(includeInactive: Boolean): List<Organization> = organizationRepository.findAll(includeInactive)
+        override fun getAllOrganizations(includeInactive: Boolean): List<Organization> {
+            val organizations = organizationRepository.findAll(includeInactive)
+            val tenantId = authorizationContext.tenantId ?: ""
+            return permissionFilterService.filter(organizations, CoreActions.Organization.GET) { org ->
+                urn.organization(tenantId, org.uuid)
+            }
+        }
 
         override fun getOrganizationById(id: Long): Organization? = organizationRepository.findById(id)
 

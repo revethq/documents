@@ -69,10 +69,11 @@ class GroupAccessPermissionTest {
 
     @Test
     fun `user with multiple group policies can access all granted groups`() {
-        val policies = listOf(
-            groupViewPolicy(groupAdminsId),
-            groupViewPolicy(groupViewersId),
-        )
+        val policies =
+            listOf(
+                groupViewPolicy(groupAdminsId),
+                groupViewPolicy(groupViewersId),
+            )
         every { policyCollector.collectPolicies(principalUrn) } returns policies
 
         assertTrue(evaluator.evaluate(groupGetRequest(groupAdminsId)).isAllowed())
@@ -83,19 +84,21 @@ class GroupAccessPermissionTest {
 
     @Test
     fun `user with wildcard group permission can access any group`() {
-        val policy = Policy(
-            id = UUID.randomUUID(),
-            name = "AllGroupsViewPolicy",
-            version = POLICY_VERSION,
-            tenantId = tenantId,
-            statements = listOf(
-                Statement(
-                    effect = Effect.ALLOW,
-                    actions = IamActions.Group.READ_ONLY,
-                    resources = listOf("urn:revet:iam:$tenantId:group/*"),
-                ),
-            ),
-        )
+        val policy =
+            Policy(
+                id = UUID.randomUUID(),
+                name = "AllGroupsViewPolicy",
+                version = POLICY_VERSION,
+                tenantId = tenantId,
+                statements =
+                    listOf(
+                        Statement(
+                            effect = Effect.ALLOW,
+                            actions = IamActions.Group.READ_ONLY,
+                            resources = listOf("urn:revet:iam:$tenantId:group/*"),
+                        ),
+                    ),
+            )
         every { policyCollector.collectPolicies(principalUrn) } returns listOf(policy)
 
         allGroupIds.forEach { groupId ->
@@ -106,19 +109,21 @@ class GroupAccessPermissionTest {
 
     @Test
     fun `service wildcard grants all group actions`() {
-        val policy = Policy(
-            id = UUID.randomUUID(),
-            name = "IamWildcardPolicy",
-            version = POLICY_VERSION,
-            tenantId = tenantId,
-            statements = listOf(
-                Statement(
-                    effect = Effect.ALLOW,
-                    actions = listOf(IamActions.ALL_ACTIONS),
-                    resources = listOf("urn:revet:iam:$tenantId:group/*"),
-                ),
-            ),
-        )
+        val policy =
+            Policy(
+                id = UUID.randomUUID(),
+                name = "IamWildcardPolicy",
+                version = POLICY_VERSION,
+                tenantId = tenantId,
+                statements =
+                    listOf(
+                        Statement(
+                            effect = Effect.ALLOW,
+                            actions = listOf(IamActions.ALL_ACTIONS),
+                            resources = listOf("urn:revet:iam:$tenantId:group/*"),
+                        ),
+                    ),
+            )
         every { policyCollector.collectPolicies(principalUrn) } returns listOf(policy)
 
         assertTrue(evaluator.evaluate(groupGetRequest(groupAdminsId)).isAllowed())
@@ -168,10 +173,11 @@ class GroupAccessPermissionTest {
 
     @Test
     fun `only permitted groups are returned when filtering`() {
-        val policies = listOf(
-            groupViewPolicy(groupAdminsId),
-            groupViewPolicy(groupAuditorsId),
-        )
+        val policies =
+            listOf(
+                groupViewPolicy(groupAdminsId),
+                groupViewPolicy(groupAuditorsId),
+            )
 
         val accessibleGroups = filterGroups(allGroupIds, policies)
 
@@ -188,19 +194,21 @@ class GroupAccessPermissionTest {
 
     @Test
     fun `all groups are returned when user has wildcard permission`() {
-        val policy = Policy(
-            id = UUID.randomUUID(),
-            name = "AllGroupsViewPolicy",
-            version = POLICY_VERSION,
-            tenantId = tenantId,
-            statements = listOf(
-                Statement(
-                    effect = Effect.ALLOW,
-                    actions = listOf(IamActions.Group.GET),
-                    resources = listOf("urn:revet:iam:$tenantId:group/*"),
-                ),
-            ),
-        )
+        val policy =
+            Policy(
+                id = UUID.randomUUID(),
+                name = "AllGroupsViewPolicy",
+                version = POLICY_VERSION,
+                tenantId = tenantId,
+                statements =
+                    listOf(
+                        Statement(
+                            effect = Effect.ALLOW,
+                            actions = listOf(IamActions.Group.GET),
+                            resources = listOf("urn:revet:iam:$tenantId:group/*"),
+                        ),
+                    ),
+            )
 
         val accessibleGroups = filterGroups(allGroupIds, listOf(policy))
 
@@ -213,22 +221,25 @@ class GroupAccessPermissionTest {
 
     @Test
     fun `user granted permission to specific groups can access only those`() {
-        val policy = Policy(
-            id = UUID.randomUUID(),
-            name = "MultiGroupViewPolicy",
-            version = POLICY_VERSION,
-            tenantId = tenantId,
-            statements = listOf(
-                Statement(
-                    effect = Effect.ALLOW,
-                    actions = listOf(IamActions.Group.GET),
-                    resources = listOf(
-                        "urn:revet:iam:$tenantId:group/$groupAdminsId",
-                        "urn:revet:iam:$tenantId:group/$groupEditorsId",
+        val policy =
+            Policy(
+                id = UUID.randomUUID(),
+                name = "MultiGroupViewPolicy",
+                version = POLICY_VERSION,
+                tenantId = tenantId,
+                statements =
+                    listOf(
+                        Statement(
+                            effect = Effect.ALLOW,
+                            actions = listOf(IamActions.Group.GET),
+                            resources =
+                                listOf(
+                                    "urn:revet:iam:$tenantId:group/$groupAdminsId",
+                                    "urn:revet:iam:$tenantId:group/$groupEditorsId",
+                                ),
+                        ),
                     ),
-                ),
-            ),
-        )
+            )
         every { policyCollector.collectPolicies(principalUrn) } returns listOf(policy)
 
         assertTrue(evaluator.evaluate(groupGetRequest(groupAdminsId)).isAllowed())
@@ -243,26 +254,28 @@ class GroupAccessPermissionTest {
 
     @Test
     fun `explicit deny on group overrides wildcard allow`() {
-        val policy = Policy(
-            id = UUID.randomUUID(),
-            name = "AllowAllDenyOnePolicy",
-            version = POLICY_VERSION,
-            tenantId = tenantId,
-            statements = listOf(
-                Statement(
-                    sid = "AllowAllGroups",
-                    effect = Effect.ALLOW,
-                    actions = IamActions.Group.READ_ONLY,
-                    resources = listOf("urn:revet:iam:$tenantId:group/*"),
-                ),
-                Statement(
-                    sid = "DenyAuditorsGroup",
-                    effect = Effect.DENY,
-                    actions = listOf(IamActions.Group.GET),
-                    resources = listOf("urn:revet:iam:$tenantId:group/$groupAuditorsId"),
-                ),
-            ),
-        )
+        val policy =
+            Policy(
+                id = UUID.randomUUID(),
+                name = "AllowAllDenyOnePolicy",
+                version = POLICY_VERSION,
+                tenantId = tenantId,
+                statements =
+                    listOf(
+                        Statement(
+                            sid = "AllowAllGroups",
+                            effect = Effect.ALLOW,
+                            actions = IamActions.Group.READ_ONLY,
+                            resources = listOf("urn:revet:iam:$tenantId:group/*"),
+                        ),
+                        Statement(
+                            sid = "DenyAuditorsGroup",
+                            effect = Effect.DENY,
+                            actions = listOf(IamActions.Group.GET),
+                            resources = listOf("urn:revet:iam:$tenantId:group/$groupAuditorsId"),
+                        ),
+                    ),
+            )
         every { policyCollector.collectPolicies(principalUrn) } returns listOf(policy)
 
         assertTrue(evaluator.evaluate(groupGetRequest(groupAdminsId)).isAllowed())
@@ -275,24 +288,26 @@ class GroupAccessPermissionTest {
 
     @Test
     fun `explicit deny is excluded from filtered results`() {
-        val policy = Policy(
-            id = UUID.randomUUID(),
-            name = "AllowAllDenyOnePolicy",
-            version = POLICY_VERSION,
-            tenantId = tenantId,
-            statements = listOf(
-                Statement(
-                    effect = Effect.ALLOW,
-                    actions = listOf(IamActions.Group.GET),
-                    resources = listOf("urn:revet:iam:$tenantId:group/*"),
-                ),
-                Statement(
-                    effect = Effect.DENY,
-                    actions = listOf(IamActions.Group.GET),
-                    resources = listOf("urn:revet:iam:$tenantId:group/$groupAuditorsId"),
-                ),
-            ),
-        )
+        val policy =
+            Policy(
+                id = UUID.randomUUID(),
+                name = "AllowAllDenyOnePolicy",
+                version = POLICY_VERSION,
+                tenantId = tenantId,
+                statements =
+                    listOf(
+                        Statement(
+                            effect = Effect.ALLOW,
+                            actions = listOf(IamActions.Group.GET),
+                            resources = listOf("urn:revet:iam:$tenantId:group/*"),
+                        ),
+                        Statement(
+                            effect = Effect.DENY,
+                            actions = listOf(IamActions.Group.GET),
+                            resources = listOf("urn:revet:iam:$tenantId:group/$groupAuditorsId"),
+                        ),
+                    ),
+            )
 
         val accessibleGroups = filterGroups(allGroupIds, listOf(policy))
 
@@ -330,12 +345,14 @@ class GroupAccessPermissionTest {
             resourceUrn = "urn:revet:iam:$tenantId:group/*",
         )
 
-    private fun groupRequest(action: String, groupId: UUID) =
-        AuthorizationRequest(
-            principalUrn = principalUrn,
-            action = action,
-            resourceUrn = "urn:revet:iam:$tenantId:group/$groupId",
-        )
+    private fun groupRequest(
+        action: String,
+        groupId: UUID,
+    ) = AuthorizationRequest(
+        principalUrn = principalUrn,
+        action = action,
+        resourceUrn = "urn:revet:iam:$tenantId:group/$groupId",
+    )
 
     private fun groupViewPolicy(groupId: UUID) =
         Policy(
@@ -343,13 +360,14 @@ class GroupAccessPermissionTest {
             name = "GroupViewPolicy-$groupId",
             version = POLICY_VERSION,
             tenantId = tenantId,
-            statements = listOf(
-                Statement(
-                    effect = Effect.ALLOW,
-                    actions = IamActions.Group.READ_ONLY,
-                    resources = listOf("urn:revet:iam:$tenantId:group/$groupId"),
+            statements =
+                listOf(
+                    Statement(
+                        effect = Effect.ALLOW,
+                        actions = IamActions.Group.READ_ONLY,
+                        resources = listOf("urn:revet:iam:$tenantId:group/$groupId"),
+                    ),
                 ),
-            ),
         )
 
     private fun groupManagerPolicy(groupId: UUID) =
@@ -358,12 +376,13 @@ class GroupAccessPermissionTest {
             name = "GroupManagerPolicy-$groupId",
             version = POLICY_VERSION,
             tenantId = tenantId,
-            statements = listOf(
-                Statement(
-                    effect = Effect.ALLOW,
-                    actions = IamActions.Group.ALL,
-                    resources = listOf("urn:revet:iam:$tenantId:group/$groupId"),
+            statements =
+                listOf(
+                    Statement(
+                        effect = Effect.ALLOW,
+                        actions = IamActions.Group.ALL,
+                        resources = listOf("urn:revet:iam:$tenantId:group/$groupId"),
+                    ),
                 ),
-            ),
         )
 }

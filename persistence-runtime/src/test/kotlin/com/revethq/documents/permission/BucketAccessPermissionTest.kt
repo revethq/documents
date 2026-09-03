@@ -69,10 +69,11 @@ class BucketAccessPermissionTest {
 
     @Test
     fun `user with multiple bucket policies can access all granted buckets`() {
-        val policies = listOf(
-            bucketViewPolicy(bucketPrimaryUuid),
-            bucketViewPolicy(bucketStagingUuid),
-        )
+        val policies =
+            listOf(
+                bucketViewPolicy(bucketPrimaryUuid),
+                bucketViewPolicy(bucketStagingUuid),
+            )
         every { policyCollector.collectPolicies(principalUrn) } returns policies
 
         assertTrue(evaluator.evaluate(bucketGetRequest(bucketPrimaryUuid)).isAllowed())
@@ -83,19 +84,21 @@ class BucketAccessPermissionTest {
 
     @Test
     fun `user with wildcard bucket permission can access any bucket`() {
-        val policy = Policy(
-            id = UUID.randomUUID(),
-            name = "AllBucketsViewPolicy",
-            version = POLICY_VERSION,
-            tenantId = tenantId,
-            statements = listOf(
-                Statement(
-                    effect = Effect.ALLOW,
-                    actions = BucketActions.Bucket.READ_ONLY,
-                    resources = listOf("urn:revet:buckets:$tenantId:bucket/*"),
-                ),
-            ),
-        )
+        val policy =
+            Policy(
+                id = UUID.randomUUID(),
+                name = "AllBucketsViewPolicy",
+                version = POLICY_VERSION,
+                tenantId = tenantId,
+                statements =
+                    listOf(
+                        Statement(
+                            effect = Effect.ALLOW,
+                            actions = BucketActions.Bucket.READ_ONLY,
+                            resources = listOf("urn:revet:buckets:$tenantId:bucket/*"),
+                        ),
+                    ),
+            )
         every { policyCollector.collectPolicies(principalUrn) } returns listOf(policy)
 
         allBucketUuids.forEach { bucketUuid ->
@@ -106,19 +109,21 @@ class BucketAccessPermissionTest {
 
     @Test
     fun `service wildcard grants all bucket actions`() {
-        val policy = Policy(
-            id = UUID.randomUUID(),
-            name = "BucketsWildcardPolicy",
-            version = POLICY_VERSION,
-            tenantId = tenantId,
-            statements = listOf(
-                Statement(
-                    effect = Effect.ALLOW,
-                    actions = listOf(BucketActions.ALL_ACTIONS),
-                    resources = listOf("urn:revet:buckets:$tenantId:bucket/*"),
-                ),
-            ),
-        )
+        val policy =
+            Policy(
+                id = UUID.randomUUID(),
+                name = "BucketsWildcardPolicy",
+                version = POLICY_VERSION,
+                tenantId = tenantId,
+                statements =
+                    listOf(
+                        Statement(
+                            effect = Effect.ALLOW,
+                            actions = listOf(BucketActions.ALL_ACTIONS),
+                            resources = listOf("urn:revet:buckets:$tenantId:bucket/*"),
+                        ),
+                    ),
+            )
         every { policyCollector.collectPolicies(principalUrn) } returns listOf(policy)
 
         assertTrue(evaluator.evaluate(bucketGetRequest(bucketPrimaryUuid)).isAllowed())
@@ -144,10 +149,11 @@ class BucketAccessPermissionTest {
 
     @Test
     fun `only permitted buckets are returned when filtering`() {
-        val policies = listOf(
-            bucketViewPolicy(bucketPrimaryUuid),
-            bucketViewPolicy(bucketArchiveUuid),
-        )
+        val policies =
+            listOf(
+                bucketViewPolicy(bucketPrimaryUuid),
+                bucketViewPolicy(bucketArchiveUuid),
+            )
 
         val accessibleBuckets = filterBuckets(allBucketUuids, policies)
 
@@ -164,19 +170,21 @@ class BucketAccessPermissionTest {
 
     @Test
     fun `all buckets are returned when user has wildcard permission`() {
-        val policy = Policy(
-            id = UUID.randomUUID(),
-            name = "AllBucketsViewPolicy",
-            version = POLICY_VERSION,
-            tenantId = tenantId,
-            statements = listOf(
-                Statement(
-                    effect = Effect.ALLOW,
-                    actions = listOf(BucketActions.Bucket.GET),
-                    resources = listOf("urn:revet:buckets:$tenantId:bucket/*"),
-                ),
-            ),
-        )
+        val policy =
+            Policy(
+                id = UUID.randomUUID(),
+                name = "AllBucketsViewPolicy",
+                version = POLICY_VERSION,
+                tenantId = tenantId,
+                statements =
+                    listOf(
+                        Statement(
+                            effect = Effect.ALLOW,
+                            actions = listOf(BucketActions.Bucket.GET),
+                            resources = listOf("urn:revet:buckets:$tenantId:bucket/*"),
+                        ),
+                    ),
+            )
 
         val accessibleBuckets = filterBuckets(allBucketUuids, listOf(policy))
 
@@ -189,22 +197,25 @@ class BucketAccessPermissionTest {
 
     @Test
     fun `user granted permission to specific buckets can access only those`() {
-        val policy = Policy(
-            id = UUID.randomUUID(),
-            name = "MultiBucketViewPolicy",
-            version = POLICY_VERSION,
-            tenantId = tenantId,
-            statements = listOf(
-                Statement(
-                    effect = Effect.ALLOW,
-                    actions = listOf(BucketActions.Bucket.GET),
-                    resources = listOf(
-                        "urn:revet:buckets:$tenantId:bucket/$bucketPrimaryUuid",
-                        "urn:revet:buckets:$tenantId:bucket/$bucketBackupUuid",
+        val policy =
+            Policy(
+                id = UUID.randomUUID(),
+                name = "MultiBucketViewPolicy",
+                version = POLICY_VERSION,
+                tenantId = tenantId,
+                statements =
+                    listOf(
+                        Statement(
+                            effect = Effect.ALLOW,
+                            actions = listOf(BucketActions.Bucket.GET),
+                            resources =
+                                listOf(
+                                    "urn:revet:buckets:$tenantId:bucket/$bucketPrimaryUuid",
+                                    "urn:revet:buckets:$tenantId:bucket/$bucketBackupUuid",
+                                ),
+                        ),
                     ),
-                ),
-            ),
-        )
+            )
         every { policyCollector.collectPolicies(principalUrn) } returns listOf(policy)
 
         assertTrue(evaluator.evaluate(bucketGetRequest(bucketPrimaryUuid)).isAllowed())
@@ -219,26 +230,28 @@ class BucketAccessPermissionTest {
 
     @Test
     fun `explicit deny on bucket overrides wildcard allow`() {
-        val policy = Policy(
-            id = UUID.randomUUID(),
-            name = "AllowAllDenyOnePolicy",
-            version = POLICY_VERSION,
-            tenantId = tenantId,
-            statements = listOf(
-                Statement(
-                    sid = "AllowAllBuckets",
-                    effect = Effect.ALLOW,
-                    actions = BucketActions.Bucket.READ_ONLY,
-                    resources = listOf("urn:revet:buckets:$tenantId:bucket/*"),
-                ),
-                Statement(
-                    sid = "DenyBackupBucket",
-                    effect = Effect.DENY,
-                    actions = listOf(BucketActions.Bucket.GET),
-                    resources = listOf("urn:revet:buckets:$tenantId:bucket/$bucketBackupUuid"),
-                ),
-            ),
-        )
+        val policy =
+            Policy(
+                id = UUID.randomUUID(),
+                name = "AllowAllDenyOnePolicy",
+                version = POLICY_VERSION,
+                tenantId = tenantId,
+                statements =
+                    listOf(
+                        Statement(
+                            sid = "AllowAllBuckets",
+                            effect = Effect.ALLOW,
+                            actions = BucketActions.Bucket.READ_ONLY,
+                            resources = listOf("urn:revet:buckets:$tenantId:bucket/*"),
+                        ),
+                        Statement(
+                            sid = "DenyBackupBucket",
+                            effect = Effect.DENY,
+                            actions = listOf(BucketActions.Bucket.GET),
+                            resources = listOf("urn:revet:buckets:$tenantId:bucket/$bucketBackupUuid"),
+                        ),
+                    ),
+            )
         every { policyCollector.collectPolicies(principalUrn) } returns listOf(policy)
 
         assertTrue(evaluator.evaluate(bucketGetRequest(bucketPrimaryUuid)).isAllowed())
@@ -251,24 +264,26 @@ class BucketAccessPermissionTest {
 
     @Test
     fun `explicit deny is excluded from filtered results`() {
-        val policy = Policy(
-            id = UUID.randomUUID(),
-            name = "AllowAllDenyOnePolicy",
-            version = POLICY_VERSION,
-            tenantId = tenantId,
-            statements = listOf(
-                Statement(
-                    effect = Effect.ALLOW,
-                    actions = listOf(BucketActions.Bucket.GET),
-                    resources = listOf("urn:revet:buckets:$tenantId:bucket/*"),
-                ),
-                Statement(
-                    effect = Effect.DENY,
-                    actions = listOf(BucketActions.Bucket.GET),
-                    resources = listOf("urn:revet:buckets:$tenantId:bucket/$bucketBackupUuid"),
-                ),
-            ),
-        )
+        val policy =
+            Policy(
+                id = UUID.randomUUID(),
+                name = "AllowAllDenyOnePolicy",
+                version = POLICY_VERSION,
+                tenantId = tenantId,
+                statements =
+                    listOf(
+                        Statement(
+                            effect = Effect.ALLOW,
+                            actions = listOf(BucketActions.Bucket.GET),
+                            resources = listOf("urn:revet:buckets:$tenantId:bucket/*"),
+                        ),
+                        Statement(
+                            effect = Effect.DENY,
+                            actions = listOf(BucketActions.Bucket.GET),
+                            resources = listOf("urn:revet:buckets:$tenantId:bucket/$bucketBackupUuid"),
+                        ),
+                    ),
+            )
 
         val accessibleBuckets = filterBuckets(allBucketUuids, listOf(policy))
 
@@ -306,12 +321,14 @@ class BucketAccessPermissionTest {
             resourceUrn = "urn:revet:buckets:$tenantId:bucket/*",
         )
 
-    private fun bucketRequest(action: String, bucketUuid: UUID) =
-        AuthorizationRequest(
-            principalUrn = principalUrn,
-            action = action,
-            resourceUrn = "urn:revet:buckets:$tenantId:bucket/$bucketUuid",
-        )
+    private fun bucketRequest(
+        action: String,
+        bucketUuid: UUID,
+    ) = AuthorizationRequest(
+        principalUrn = principalUrn,
+        action = action,
+        resourceUrn = "urn:revet:buckets:$tenantId:bucket/$bucketUuid",
+    )
 
     private fun bucketViewPolicy(bucketUuid: UUID) =
         Policy(
@@ -319,12 +336,13 @@ class BucketAccessPermissionTest {
             name = "BucketViewPolicy-$bucketUuid",
             version = POLICY_VERSION,
             tenantId = tenantId,
-            statements = listOf(
-                Statement(
-                    effect = Effect.ALLOW,
-                    actions = BucketActions.Bucket.READ_ONLY,
-                    resources = listOf("urn:revet:buckets:$tenantId:bucket/$bucketUuid"),
+            statements =
+                listOf(
+                    Statement(
+                        effect = Effect.ALLOW,
+                        actions = BucketActions.Bucket.READ_ONLY,
+                        resources = listOf("urn:revet:buckets:$tenantId:bucket/$bucketUuid"),
+                    ),
                 ),
-            ),
         )
 }

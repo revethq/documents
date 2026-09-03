@@ -3,6 +3,9 @@ package com.revethq.documents.service
 import com.revethq.core.Tag
 import com.revethq.core.repository.TagRepository
 import com.revethq.core.repository.TaggedItemRepository
+import com.revethq.documents.permission.Actions
+import com.revethq.documents.permission.DocumentsUrn
+import com.revethq.iam.permission.web.filter.AuthorizationContext
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 
@@ -15,8 +18,17 @@ class TagServiceImpl
     constructor(
         private val tagRepository: TagRepository,
         private val taggedItemRepository: TaggedItemRepository,
+        private val permissionFilterService: PermissionFilterService,
+        private val urn: DocumentsUrn,
+        private val authorizationContext: AuthorizationContext,
     ) : TagService {
-        override fun getAllTags(organizationId: Long): List<Tag> = tagRepository.findAllByOrganizationId(organizationId)
+        override fun getAllTags(organizationId: Long): List<Tag> {
+            val tags = tagRepository.findAllByOrganizationId(organizationId)
+            val tenantId = authorizationContext.tenantId ?: ""
+            return permissionFilterService.filter(tags, Actions.Tag.GET) { tag ->
+                urn.tag(tenantId, tag.id!!.toLong())
+            }
+        }
 
         override fun getTagById(id: Int): Tag? = tagRepository.findById(id)
 

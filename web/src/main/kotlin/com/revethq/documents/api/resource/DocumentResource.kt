@@ -20,6 +20,7 @@ import com.revethq.documents.service.DocumentStorageService
 import com.revethq.documents.service.DocumentVersionService
 import com.revethq.documents.service.TagService
 import com.revethq.iam.permission.web.filter.RequiresPermission
+import io.quarkus.security.Authenticated
 import jakarta.inject.Inject
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.DELETE
@@ -69,7 +70,7 @@ class DocumentResource
         }
 
         @GET
-        @RequiresPermission(action = Actions.Document.LIST, resource = "urn:revet:documents:{tenantId}:document/*")
+        @Authenticated
         @Operation(
             summary = "List documents with pagination",
             description = "Retrieve a paginated list of documents with optional filtering and sorting",

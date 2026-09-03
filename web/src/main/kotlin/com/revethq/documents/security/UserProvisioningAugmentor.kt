@@ -64,7 +64,8 @@ class UserProvisioningAugmentor : SecurityIdentityAugmentor {
 
                 if (user != null) {
                     // Store the resolved user UUID on the identity for downstream use
-                    QuarkusSecurityIdentity.builder(identity)
+                    QuarkusSecurityIdentity
+                        .builder(identity)
                         .addAttribute(USER_ID_ATTRIBUTE, user.id)
                         .build()
                 } else {

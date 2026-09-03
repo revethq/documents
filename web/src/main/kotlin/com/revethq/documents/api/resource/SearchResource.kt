@@ -7,9 +7,8 @@ import com.revethq.core.dto.ProjectDTO
 import com.revethq.documents.api.mapper.DocumentDTOMapper
 import com.revethq.documents.dto.DocumentDTO
 import com.revethq.documents.dto.SearchResultsDTO
-import com.revethq.documents.permission.Actions
 import com.revethq.documents.service.SearchService
-import com.revethq.iam.permission.web.filter.RequiresPermission
+import io.quarkus.security.Authenticated
 import jakarta.inject.Inject
 import jakarta.ws.rs.BadRequestException
 import jakarta.ws.rs.Consumes
@@ -39,7 +38,7 @@ class SearchResource
         private val searchService: com.revethq.documents.service.SearchService,
     ) {
         @GET
-        @RequiresPermission(action = Actions.Search.SEARCH_DOCUMENTS, resource = "urn:revet:documents:{tenantId}:document/*")
+        @Authenticated
         @Operation(
             summary = "Search across all entities",
             description = "Perform full-text search across documents, projects, and organizations",
@@ -96,7 +95,7 @@ class SearchResource
 
         @GET
         @Path("/documents")
-        @RequiresPermission(action = Actions.Search.SEARCH_DOCUMENTS, resource = "urn:revet:documents:{tenantId}:document/*")
+        @Authenticated
         @Operation(
             summary = "Search documents",
             description = "Perform full-text search on documents (name, tags, MIME type)",
@@ -136,7 +135,7 @@ class SearchResource
 
         @GET
         @Path("/projects")
-        @RequiresPermission(action = Actions.Search.SEARCH_DOCUMENTS, resource = "urn:revet:documents:{tenantId}:project/*")
+        @Authenticated
         @Operation(
             summary = "Search projects",
             description = "Perform full-text search on projects (name, description, tags)",
@@ -176,7 +175,7 @@ class SearchResource
 
         @GET
         @Path("/organizations")
-        @RequiresPermission(action = Actions.Search.SEARCH_DOCUMENTS, resource = "urn:revet:documents:{tenantId}:organization/*")
+        @Authenticated
         @Operation(
             summary = "Search organizations",
             description = "Perform full-text search on organizations (name, description)",

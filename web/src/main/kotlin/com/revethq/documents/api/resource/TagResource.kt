@@ -8,6 +8,7 @@ import com.revethq.documents.dto.ProblemDetail
 import com.revethq.documents.permission.Actions
 import com.revethq.documents.service.TagService
 import com.revethq.iam.permission.web.filter.RequiresPermission
+import io.quarkus.security.Authenticated
 import jakarta.inject.Inject
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.DELETE
@@ -41,7 +42,7 @@ class TagResource
         private val tagService: TagService,
     ) {
         @GET
-        @RequiresPermission(action = Actions.Tag.LIST, resource = "urn:revet:documents:{tenantId}:tag/*")
+        @Authenticated
         @Operation(summary = "List all tags", description = "Retrieve a list of all tags for an organization")
         @APIResponses(
             APIResponse(

@@ -3,9 +3,9 @@ quarkus = "3.31.1"
 kotlin = "2.3.10"
 ktlint = "14.0.1"
 mockk = "1.14.9"
-revet-core = "0.2.5"
-revet-iam = "0.1.20"
-revet-buckets = "0.1.2"
+revet-core = "0.2.7"
+revet-iam = "0.1.22"
+revet-buckets = "0.1.6"
 revet-capabilities = "0.1.0"
 google-cloud-storage = "2.20.1"
 
@@ -23,6 +23,7 @@ quarkus-smallrye-health = { module = "io.quarkus:quarkus-smallrye-health" }
 quarkus-smallrye-jwt = { module = "io.quarkus:quarkus-smallrye-jwt" }
 quarkus-reactive-routes = { module = "io.quarkus:quarkus-reactive-routes" }
 quarkus-container-image-docker = { module = "io.quarkus:quarkus-container-image-docker" }
+quarkus-cyclonedx = { module = "io.quarkus:quarkus-cyclonedx" }
 quarkus-amazon-s3 = { module = "io.quarkiverse.amazonservices:quarkus-amazon-s3" }
 aws-url-connection-client = { module = "software.amazon.awssdk:url-connection-client" }
 google-cloud-storage = { module = "io.quarkiverse.googlecloudservices:quarkus-google-cloud-storage", version.ref = "google-cloud-storage" }

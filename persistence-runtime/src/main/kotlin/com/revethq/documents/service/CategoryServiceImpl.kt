@@ -1,7 +1,10 @@
 package com.revethq.documents.service
 
 import com.revethq.documents.domain.Category
+import com.revethq.documents.permission.Actions
+import com.revethq.documents.permission.DocumentsUrn
 import com.revethq.documents.repository.CategoryRepository
+import com.revethq.iam.permission.web.filter.AuthorizationContext
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 
@@ -13,12 +16,27 @@ class CategoryServiceImpl
     @Inject
     constructor(
         private val categoryRepository: CategoryRepository,
+        private val permissionFilterService: PermissionFilterService,
+        private val urn: DocumentsUrn,
+        private val authorizationContext: AuthorizationContext,
     ) : CategoryService {
-        override fun getAllCategories(): List<Category> = categoryRepository.findAll()
+        override fun getAllCategories(): List<Category> {
+            val categories = categoryRepository.findAll()
+            val tenantId = authorizationContext.tenantId ?: ""
+            return permissionFilterService.filter(categories, Actions.Category.GET) { category ->
+                urn.category(tenantId, category.id!!)
+            }
+        }
 
         override fun getCategoryById(id: Long): Category? = categoryRepository.findById(id)
 
-        override fun getCategoriesByProjectId(projectId: Long): List<Category> = categoryRepository.findByProjectId(projectId)
+        override fun getCategoriesByProjectId(projectId: Long): List<Category> {
+            val categories = categoryRepository.findByProjectId(projectId)
+            val tenantId = authorizationContext.tenantId ?: ""
+            return permissionFilterService.filter(categories, Actions.Category.GET) { category ->
+                urn.category(tenantId, category.id!!)
+            }
+        }
 
         override fun createCategory(
             name: String,

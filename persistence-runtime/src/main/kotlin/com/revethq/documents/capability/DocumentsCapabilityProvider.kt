@@ -18,13 +18,24 @@ class DocumentsCapabilityProvider : CapabilityProvider {
             capabilities =
                 listOf(
                     // Documents-native capabilities
+                    // Note: LIST actions are excluded because list endpoints use @Authenticated
+                    // with service-layer permission filtering. Any user with at least one
+                    // permission on a resource type can list (and see filtered results).
                     CapabilityDeclaration(
                         id = "documents:manage-documents",
                         name = "Manage Documents",
                         description = "Create, update, delete, and download documents",
                         category = "documents",
                         permissions =
-                            Actions.Document.ALL.map {
+                            listOf(
+                                Actions.Document.GET,
+                                Actions.Document.CREATE,
+                                Actions.Document.UPDATE,
+                                Actions.Document.DELETE,
+                                Actions.Document.DOWNLOAD,
+                                Actions.Document.ADD_TAG,
+                                Actions.Document.REMOVE_TAG,
+                            ).map {
                                 PermissionRef(action = it, resourceType = "urn:revet:documents:{tenantId}:document/*")
                             },
                     ),
@@ -34,7 +45,13 @@ class DocumentsCapabilityProvider : CapabilityProvider {
                         description = "Create, update, and delete document versions",
                         category = "documents",
                         permissions =
-                            Actions.DocumentVersion.ALL.map {
+                            listOf(
+                                Actions.DocumentVersion.GET,
+                                Actions.DocumentVersion.CREATE,
+                                Actions.DocumentVersion.UPDATE,
+                                Actions.DocumentVersion.DELETE,
+                                Actions.DocumentVersion.COMPLETE_UPLOAD,
+                            ).map {
                                 PermissionRef(action = it, resourceType = "urn:revet:documents:{tenantId}:document-version/*")
                             },
                     ),
@@ -44,7 +61,12 @@ class DocumentsCapabilityProvider : CapabilityProvider {
                         description = "Create, update, and delete document categories",
                         category = "documents",
                         permissions =
-                            Actions.Category.ALL.map {
+                            listOf(
+                                Actions.Category.GET,
+                                Actions.Category.CREATE,
+                                Actions.Category.UPDATE,
+                                Actions.Category.DELETE,
+                            ).map {
                                 PermissionRef(action = it, resourceType = "urn:revet:documents:{tenantId}:category/*")
                             },
                     ),
@@ -54,7 +76,12 @@ class DocumentsCapabilityProvider : CapabilityProvider {
                         description = "Create, update, and delete tags",
                         category = "documents",
                         permissions =
-                            Actions.Tag.ALL.map {
+                            listOf(
+                                Actions.Tag.GET,
+                                Actions.Tag.CREATE,
+                                Actions.Tag.UPDATE,
+                                Actions.Tag.DELETE,
+                            ).map {
                                 PermissionRef(action = it, resourceType = "urn:revet:documents:{tenantId}:tag/*")
                             },
                     ),
@@ -64,7 +91,12 @@ class DocumentsCapabilityProvider : CapabilityProvider {
                         description = "Create, update, and delete users",
                         category = "documents",
                         permissions =
-                            Actions.User.ALL.map {
+                            listOf(
+                                Actions.User.GET,
+                                Actions.User.CREATE,
+                                Actions.User.UPDATE,
+                                Actions.User.DELETE,
+                            ).map {
                                 PermissionRef(action = it, resourceType = "urn:revet:documents:{tenantId}:user/*")
                             },
                     ),
@@ -95,7 +127,12 @@ class DocumentsCapabilityProvider : CapabilityProvider {
                         description = "Create, update, and delete organizations",
                         category = "core",
                         permissions =
-                            CoreActions.Organization.ALL.map {
+                            listOf(
+                                CoreActions.Organization.GET,
+                                CoreActions.Organization.CREATE,
+                                CoreActions.Organization.UPDATE,
+                                CoreActions.Organization.DELETE,
+                            ).map {
                                 PermissionRef(action = it, resourceType = "urn:revet:core:{tenantId}:organization/*")
                             },
                     ),
@@ -105,7 +142,12 @@ class DocumentsCapabilityProvider : CapabilityProvider {
                         description = "Create, update, and delete projects",
                         category = "core",
                         permissions =
-                            CoreActions.Project.ALL.map {
+                            listOf(
+                                CoreActions.Project.GET,
+                                CoreActions.Project.CREATE,
+                                CoreActions.Project.UPDATE,
+                                CoreActions.Project.DELETE,
+                            ).map {
                                 PermissionRef(action = it, resourceType = "urn:revet:core:{tenantId}:project/*")
                             },
                     ),
@@ -115,7 +157,12 @@ class DocumentsCapabilityProvider : CapabilityProvider {
                         description = "Create, update, and delete storage buckets",
                         category = "storage",
                         permissions =
-                            BucketActions.Bucket.ALL.map {
+                            listOf(
+                                BucketActions.Bucket.GET,
+                                BucketActions.Bucket.CREATE,
+                                BucketActions.Bucket.UPDATE,
+                                BucketActions.Bucket.DELETE,
+                            ).map {
                                 PermissionRef(action = it, resourceType = "urn:revet:buckets:{tenantId}:bucket/*")
                             },
                     ),
@@ -125,7 +172,15 @@ class DocumentsCapabilityProvider : CapabilityProvider {
                         description = "Create, update, and delete groups and manage group membership",
                         category = "iam",
                         permissions =
-                            IamActions.Group.ALL.map {
+                            listOf(
+                                IamActions.Group.GET,
+                                IamActions.Group.CREATE,
+                                IamActions.Group.UPDATE,
+                                IamActions.Group.DELETE,
+                                IamActions.Group.LIST_MEMBERS,
+                                IamActions.Group.ADD_MEMBER,
+                                IamActions.Group.REMOVE_MEMBER,
+                            ).map {
                                 PermissionRef(action = it, resourceType = "urn:revet:iam:{tenantId}:group/*")
                             },
                     ),

@@ -69,10 +69,11 @@ class UserAccessPermissionTest {
 
     @Test
     fun `user with multiple user policies can access all granted users`() {
-        val policies = listOf(
-            userViewPolicy(userAliceId),
-            userViewPolicy(userCharlieId),
-        )
+        val policies =
+            listOf(
+                userViewPolicy(userAliceId),
+                userViewPolicy(userCharlieId),
+            )
         every { policyCollector.collectPolicies(principalUrn) } returns policies
 
         assertTrue(evaluator.evaluate(userGetRequest(userAliceId)).isAllowed())
@@ -83,19 +84,21 @@ class UserAccessPermissionTest {
 
     @Test
     fun `user with wildcard user permission can access any user`() {
-        val policy = Policy(
-            id = UUID.randomUUID(),
-            name = "AllUsersViewPolicy",
-            version = POLICY_VERSION,
-            tenantId = tenantId,
-            statements = listOf(
-                Statement(
-                    effect = Effect.ALLOW,
-                    actions = IamActions.User.READ_ONLY,
-                    resources = listOf("urn:revet:iam:$tenantId:user/*"),
-                ),
-            ),
-        )
+        val policy =
+            Policy(
+                id = UUID.randomUUID(),
+                name = "AllUsersViewPolicy",
+                version = POLICY_VERSION,
+                tenantId = tenantId,
+                statements =
+                    listOf(
+                        Statement(
+                            effect = Effect.ALLOW,
+                            actions = IamActions.User.READ_ONLY,
+                            resources = listOf("urn:revet:iam:$tenantId:user/*"),
+                        ),
+                    ),
+            )
         every { policyCollector.collectPolicies(principalUrn) } returns listOf(policy)
 
         allUserIds.forEach { userId ->
@@ -106,19 +109,21 @@ class UserAccessPermissionTest {
 
     @Test
     fun `service wildcard grants all user actions`() {
-        val policy = Policy(
-            id = UUID.randomUUID(),
-            name = "IamWildcardPolicy",
-            version = POLICY_VERSION,
-            tenantId = tenantId,
-            statements = listOf(
-                Statement(
-                    effect = Effect.ALLOW,
-                    actions = listOf(IamActions.ALL_ACTIONS),
-                    resources = listOf("urn:revet:iam:$tenantId:user/*"),
-                ),
-            ),
-        )
+        val policy =
+            Policy(
+                id = UUID.randomUUID(),
+                name = "IamWildcardPolicy",
+                version = POLICY_VERSION,
+                tenantId = tenantId,
+                statements =
+                    listOf(
+                        Statement(
+                            effect = Effect.ALLOW,
+                            actions = listOf(IamActions.ALL_ACTIONS),
+                            resources = listOf("urn:revet:iam:$tenantId:user/*"),
+                        ),
+                    ),
+            )
         every { policyCollector.collectPolicies(principalUrn) } returns listOf(policy)
 
         assertTrue(evaluator.evaluate(userGetRequest(userAliceId)).isAllowed())
@@ -144,10 +149,11 @@ class UserAccessPermissionTest {
 
     @Test
     fun `only permitted users are returned when filtering`() {
-        val policies = listOf(
-            userViewPolicy(userAliceId),
-            userViewPolicy(userDianaId),
-        )
+        val policies =
+            listOf(
+                userViewPolicy(userAliceId),
+                userViewPolicy(userDianaId),
+            )
 
         val accessibleUsers = filterUsers(allUserIds, policies)
 
@@ -164,19 +170,21 @@ class UserAccessPermissionTest {
 
     @Test
     fun `all users are returned when user has wildcard permission`() {
-        val policy = Policy(
-            id = UUID.randomUUID(),
-            name = "AllUsersViewPolicy",
-            version = POLICY_VERSION,
-            tenantId = tenantId,
-            statements = listOf(
-                Statement(
-                    effect = Effect.ALLOW,
-                    actions = listOf(IamActions.User.GET),
-                    resources = listOf("urn:revet:iam:$tenantId:user/*"),
-                ),
-            ),
-        )
+        val policy =
+            Policy(
+                id = UUID.randomUUID(),
+                name = "AllUsersViewPolicy",
+                version = POLICY_VERSION,
+                tenantId = tenantId,
+                statements =
+                    listOf(
+                        Statement(
+                            effect = Effect.ALLOW,
+                            actions = listOf(IamActions.User.GET),
+                            resources = listOf("urn:revet:iam:$tenantId:user/*"),
+                        ),
+                    ),
+            )
 
         val accessibleUsers = filterUsers(allUserIds, listOf(policy))
 
@@ -189,22 +197,25 @@ class UserAccessPermissionTest {
 
     @Test
     fun `user granted permission to specific users can access only those`() {
-        val policy = Policy(
-            id = UUID.randomUUID(),
-            name = "MultiUserViewPolicy",
-            version = POLICY_VERSION,
-            tenantId = tenantId,
-            statements = listOf(
-                Statement(
-                    effect = Effect.ALLOW,
-                    actions = listOf(IamActions.User.GET),
-                    resources = listOf(
-                        "urn:revet:iam:$tenantId:user/$userAliceId",
-                        "urn:revet:iam:$tenantId:user/$userBobId",
+        val policy =
+            Policy(
+                id = UUID.randomUUID(),
+                name = "MultiUserViewPolicy",
+                version = POLICY_VERSION,
+                tenantId = tenantId,
+                statements =
+                    listOf(
+                        Statement(
+                            effect = Effect.ALLOW,
+                            actions = listOf(IamActions.User.GET),
+                            resources =
+                                listOf(
+                                    "urn:revet:iam:$tenantId:user/$userAliceId",
+                                    "urn:revet:iam:$tenantId:user/$userBobId",
+                                ),
+                        ),
                     ),
-                ),
-            ),
-        )
+            )
         every { policyCollector.collectPolicies(principalUrn) } returns listOf(policy)
 
         assertTrue(evaluator.evaluate(userGetRequest(userAliceId)).isAllowed())
@@ -219,26 +230,28 @@ class UserAccessPermissionTest {
 
     @Test
     fun `explicit deny on user overrides wildcard allow`() {
-        val policy = Policy(
-            id = UUID.randomUUID(),
-            name = "AllowAllDenyOnePolicy",
-            version = POLICY_VERSION,
-            tenantId = tenantId,
-            statements = listOf(
-                Statement(
-                    sid = "AllowAllUsers",
-                    effect = Effect.ALLOW,
-                    actions = IamActions.User.READ_ONLY,
-                    resources = listOf("urn:revet:iam:$tenantId:user/*"),
-                ),
-                Statement(
-                    sid = "DenySpecificUser",
-                    effect = Effect.DENY,
-                    actions = listOf(IamActions.User.GET),
-                    resources = listOf("urn:revet:iam:$tenantId:user/$userCharlieId"),
-                ),
-            ),
-        )
+        val policy =
+            Policy(
+                id = UUID.randomUUID(),
+                name = "AllowAllDenyOnePolicy",
+                version = POLICY_VERSION,
+                tenantId = tenantId,
+                statements =
+                    listOf(
+                        Statement(
+                            sid = "AllowAllUsers",
+                            effect = Effect.ALLOW,
+                            actions = IamActions.User.READ_ONLY,
+                            resources = listOf("urn:revet:iam:$tenantId:user/*"),
+                        ),
+                        Statement(
+                            sid = "DenySpecificUser",
+                            effect = Effect.DENY,
+                            actions = listOf(IamActions.User.GET),
+                            resources = listOf("urn:revet:iam:$tenantId:user/$userCharlieId"),
+                        ),
+                    ),
+            )
         every { policyCollector.collectPolicies(principalUrn) } returns listOf(policy)
 
         assertTrue(evaluator.evaluate(userGetRequest(userAliceId)).isAllowed())
@@ -251,24 +264,26 @@ class UserAccessPermissionTest {
 
     @Test
     fun `explicit deny is excluded from filtered results`() {
-        val policy = Policy(
-            id = UUID.randomUUID(),
-            name = "AllowAllDenyOnePolicy",
-            version = POLICY_VERSION,
-            tenantId = tenantId,
-            statements = listOf(
-                Statement(
-                    effect = Effect.ALLOW,
-                    actions = listOf(IamActions.User.GET),
-                    resources = listOf("urn:revet:iam:$tenantId:user/*"),
-                ),
-                Statement(
-                    effect = Effect.DENY,
-                    actions = listOf(IamActions.User.GET),
-                    resources = listOf("urn:revet:iam:$tenantId:user/$userCharlieId"),
-                ),
-            ),
-        )
+        val policy =
+            Policy(
+                id = UUID.randomUUID(),
+                name = "AllowAllDenyOnePolicy",
+                version = POLICY_VERSION,
+                tenantId = tenantId,
+                statements =
+                    listOf(
+                        Statement(
+                            effect = Effect.ALLOW,
+                            actions = listOf(IamActions.User.GET),
+                            resources = listOf("urn:revet:iam:$tenantId:user/*"),
+                        ),
+                        Statement(
+                            effect = Effect.DENY,
+                            actions = listOf(IamActions.User.GET),
+                            resources = listOf("urn:revet:iam:$tenantId:user/$userCharlieId"),
+                        ),
+                    ),
+            )
 
         val accessibleUsers = filterUsers(allUserIds, listOf(policy))
 
@@ -306,12 +321,14 @@ class UserAccessPermissionTest {
             resourceUrn = "urn:revet:iam:$tenantId:user/*",
         )
 
-    private fun userRequest(action: String, userId: UUID) =
-        AuthorizationRequest(
-            principalUrn = principalUrn,
-            action = action,
-            resourceUrn = "urn:revet:iam:$tenantId:user/$userId",
-        )
+    private fun userRequest(
+        action: String,
+        userId: UUID,
+    ) = AuthorizationRequest(
+        principalUrn = principalUrn,
+        action = action,
+        resourceUrn = "urn:revet:iam:$tenantId:user/$userId",
+    )
 
     private fun userViewPolicy(userId: UUID) =
         Policy(
@@ -319,12 +336,13 @@ class UserAccessPermissionTest {
             name = "UserViewPolicy-$userId",
             version = POLICY_VERSION,
             tenantId = tenantId,
-            statements = listOf(
-                Statement(
-                    effect = Effect.ALLOW,
-                    actions = IamActions.User.READ_ONLY,
-                    resources = listOf("urn:revet:iam:$tenantId:user/$userId"),
+            statements =
+                listOf(
+                    Statement(
+                        effect = Effect.ALLOW,
+                        actions = IamActions.User.READ_ONLY,
+                        resources = listOf("urn:revet:iam:$tenantId:user/$userId"),
+                    ),
                 ),
-            ),
         )
 }

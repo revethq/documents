@@ -7,6 +7,7 @@ import com.revethq.documents.dto.UpdateCategoryRequest
 import com.revethq.documents.permission.Actions
 import com.revethq.documents.service.CategoryService
 import com.revethq.iam.permission.web.filter.RequiresPermission
+import io.quarkus.security.Authenticated
 import jakarta.inject.Inject
 import jakarta.ws.rs.Consumes
 import jakarta.ws.rs.DELETE
@@ -40,7 +41,7 @@ class CategoryResource
         private val categoryService: com.revethq.documents.service.CategoryService,
     ) {
         @GET
-        @RequiresPermission(action = Actions.Category.LIST, resource = "urn:revet:documents:{tenantId}:category/*")
+        @Authenticated
         @Operation(summary = "List all categories", description = "Retrieve a list of all categories")
         @APIResponses(
             APIResponse(

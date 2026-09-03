@@ -19,6 +19,11 @@ dependencies {
     implementation(libs.quarkus.hibernate.orm.panache.kotlin)
     implementation(libs.quarkus.jdbc.postgresql)
 
+    // Jackson (for Hibernate JSON column deserialization of Kotlin data classes)
+    implementation("com.fasterxml.jackson.core:jackson-databind")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
+
     // Revet IAM (for service implementations)
     implementation(libs.revet.iam.user)
     implementation(libs.revet.iam.user.persistence)

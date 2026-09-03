@@ -6,12 +6,14 @@ import com.revethq.core.service.ProjectService
 import com.revethq.documents.permission.DocumentsUrn
 import com.revethq.documents.permission.PrebuiltPolicies
 import com.revethq.documents.service.CurrentUserService
+import com.revethq.documents.service.PermissionFilterService
 import com.revethq.iam.permission.persistence.service.PolicyService
 import com.revethq.iam.permission.service.PolicyAttachmentService
 import com.revethq.iam.permission.web.filter.AuthorizationContext
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import java.util.UUID
+import com.revethq.core.permission.Actions as CoreActions
 
 /**
  * Implementation of ProjectService with business logic.
@@ -27,8 +29,15 @@ class ProjectServiceImpl
         private val urn: DocumentsUrn,
         private val authorizationContext: AuthorizationContext,
         private val currentUserService: CurrentUserService,
+        private val permissionFilterService: PermissionFilterService,
     ) : ProjectService {
-        override fun getAllProjects(includeInactive: Boolean): List<Project> = projectRepository.findAll(includeInactive)
+        override fun getAllProjects(includeInactive: Boolean): List<Project> {
+            val projects = projectRepository.findAll(includeInactive)
+            val tenantId = authorizationContext.tenantId ?: ""
+            return permissionFilterService.filter(projects, CoreActions.Project.GET) { project ->
+                urn.project(tenantId, project.uuid)
+            }
+        }
 
         override fun getProjectById(id: Long): Project? = projectRepository.findById(id)
 
@@ -37,7 +46,13 @@ class ProjectServiceImpl
         override fun getProjectsByOrganizationId(
             organizationId: Long,
             includeInactive: Boolean,
-        ): List<Project> = projectRepository.findByOrganizationId(organizationId, includeInactive)
+        ): List<Project> {
+            val projects = projectRepository.findByOrganizationId(organizationId, includeInactive)
+            val tenantId = authorizationContext.tenantId ?: ""
+            return permissionFilterService.filter(projects, CoreActions.Project.GET) { project ->
+                urn.project(tenantId, project.uuid)
+            }
+        }
 
         override fun createProject(
             name: String,

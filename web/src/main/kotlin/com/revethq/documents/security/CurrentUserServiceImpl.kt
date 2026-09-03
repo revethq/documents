@@ -12,6 +12,5 @@ class CurrentUserServiceImpl
     constructor(
         private val securityIdentity: SecurityIdentity,
     ) : CurrentUserService {
-        override fun getCurrentUserUuid(): UUID? =
-            securityIdentity.getAttribute<UUID>(UserProvisioningAugmentor.USER_ID_ATTRIBUTE)
+        override fun getCurrentUserUuid(): UUID? = securityIdentity.getAttribute<UUID>(UserProvisioningAugmentor.USER_ID_ATTRIBUTE)
     }

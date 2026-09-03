@@ -9,6 +9,7 @@ import com.revethq.iam.user.domain.User
 import com.revethq.iam.user.persistence.entity.IdentityProviderEntity
 import com.revethq.iam.user.persistence.repository.IdentityProviderRepository
 import com.revethq.iam.user.persistence.service.UserService
+import io.quarkus.hibernate.orm.panache.kotlin.PanacheEntity_.id
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.transaction.Transactional
